@@ -65,7 +65,7 @@ contract AuctionHouse is OwnableUpgradeable {
      * @notice Initialize the auction house and base contracts and populate configuration values.
      * @dev This function can only be called once.
      */
-    function initialize(address tomi_, address funds_) external {
+    function initialize(address tomi_, address funds_) external initializer {
         require(_msgSender() == _initializer, "Control: caller is not the initializer");
         // TODO uncomment
         // require(!_isInitialized, "Control: already initialized");
@@ -229,8 +229,7 @@ contract AuctionHouse is OwnableUpgradeable {
 
             if (price > bids[mid].amountTomi) {
                 low = mid;
-            }
-            else {
+            } else {
                 high = mid;
             }
         }
