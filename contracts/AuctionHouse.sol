@@ -14,13 +14,13 @@ contract AuctionHouse is OwnableUpgradeable {
 
     // TODO change
     /// @notice The address of the bidding token.
-    address public constant USDT = 0x0c48B9e41Fa2452158daB36096A5abf1C5Abf17C;
+    IERC20Upgradeable public constant USDT = IERC20Upgradeable(0x0c48B9e41Fa2452158daB36096A5abf1C5Abf17C);
 
     /// @notice The amount at which bids get capped.
     uint256 public constant BID_LIMIT = 100000 * 1e18;
 
     /// @notice The address of the main token.
-    address public TOMI;
+    ITomi public TOMI;
     /// @notice The address of the funds collection wallet.
     address public FUNDS;
 
@@ -71,7 +71,7 @@ contract AuctionHouse is OwnableUpgradeable {
         // require(!_isInitialized, "Control: already initialized");
         __Ownable_init();
 
-        TOMI = tomi_;
+        TOMI = ITomi(tomi_);
         FUNDS = funds_;
 
         // TODO change
@@ -86,7 +86,7 @@ contract AuctionHouse is OwnableUpgradeable {
 
     // TODO remove this function
     function test_tomi(address tomi_) external {
-        TOMI = tomi_;
+        TOMI = ITomi(tomi_);
     }
 
     // TODO remove this function
@@ -100,6 +100,7 @@ contract AuctionHouse is OwnableUpgradeable {
         uint256 userBidsLength;
 
         for (uint256 i = 0 ; i < bids.length ; i++) {
+
             if (bids[i].bidder == bidder) {
                 userBidsLength++;
             }
@@ -108,6 +109,7 @@ contract AuctionHouse is OwnableUpgradeable {
         uint256 index;
 
         for (uint256 i = 0 ; i < bids.length ; i++) {
+
             if (bids[i].bidder == bidder) {
                 userBids[index];
                 index++;
@@ -116,8 +118,8 @@ contract AuctionHouse is OwnableUpgradeable {
         return userBids;
     }
 
-    function getUserWins(address bidder) external view returns (Bid[] memory) {
-    }
+    // function getUserWins(address bidder) external view returns (Bid[] memory) {
+    // }
 
     // TODO
     function setTimeBuffer(uint256 _timeBuffer) external onlyOwner {
@@ -130,9 +132,9 @@ contract AuctionHouse is OwnableUpgradeable {
     }
     // TODO
 
-    function settleCurrentAndCreateNewAuction() external {
-        require(startTime != 0, "AuctionHouse::settleCurrentAndCreateNewAuction: auction not yet started");
-        require(block.timestamp >= endTime, "AuctionHouse::settleCurrentAndCreateNewAuction: current auction not yet completed");
+    function settleAndCreateAuction() external {
+        require(startTime != 0, "AuctionHouse::settleAndCreateAuction: auction not yet started");
+        require(block.timestamp >= endTime, "AuctionHouse::settleAndCreateAuction: current auction not yet completed");
         _settleAuction();
         _createAuction();
     }
@@ -157,11 +159,11 @@ contract AuctionHouse is OwnableUpgradeable {
 
             // if the user has lower allowance or balance than the bid, he will not be considered
             if (
-                IERC20Upgradeable(USDT).allowance(bid.bidder, address(this)) >= bidAmount &&
-                IERC20Upgradeable(USDT).balanceOf(bid.bidder) >= bidAmount
+                USDT.allowance(bid.bidder, address(this)) >= bidAmount &&
+                USDT.balanceOf(bid.bidder) >= bidAmount
             ) {
-                SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(USDT), bid.bidder, FUNDS, bidAmount);
-                ITomi(TOMI).mint(bid.bidder, bid.amountTomi);
+                SafeERC20Upgradeable.safeTransferFrom(USDT, bid.bidder, FUNDS, bidAmount);
+                TOMI.mint(bid.bidder, bid.amountTomi);
                 totalBidAmount += bidAmount;
                 // if not minting here add the variable named `bid` into the winners mapping
                 // mapping[auctionCount][_msgSender()].push(bid);
@@ -187,7 +189,7 @@ contract AuctionHouse is OwnableUpgradeable {
     function createBid(uint256 price, uint256 amountTomi) external payable {
         require(block.timestamp < endTime, "AuctionHouse::createBid: current auction completed");
         require(price > 0 && amountTomi > 0, "AuctionHouse::createBid: invalid arguments");
-        SafeERC20Upgradeable.safeIncreaseAllowance(IERC20Upgradeable(USDT), address(this), price * amountTomi);
+        SafeERC20Upgradeable.safeIncreaseAllowance(USDT, address(this), price * amountTomi);
         int256 pushAfter = _iterativeBinarySeatch(price);
 
         require(pushAfter > -2, "not good");
@@ -238,22 +240,7 @@ contract AuctionHouse is OwnableUpgradeable {
     }
 }
 
-// take approval
-    // check that tokens< 100k
-    // save that bids and address
-    // insertup Linkedlist
-//remove approval
-    // pop from linkedlist
-    // emit event
-// placebid
-    // take approval
-    // check that tokens< 100k
-    // save that bids and address
-    // insertup Linkedlist
-    // emit event
-// cancelBid
-    //remove approval
-    // pop from linkedlist
-    // emit event
-// settleAuction
-    //
+// TODO cancelBid - remove approval, pop from linkedlist
+// TODO linked list
+// TODO events
+// TODO comments
