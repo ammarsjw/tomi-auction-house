@@ -2,37 +2,38 @@
 
 pragma solidity 0.8.19;
 
-import "./libraries/SafeERC20.sol";
+import "./interfaces/ITomi.sol";
+
+import "./libraries/SafeERC20Upgradeable.sol";
 
 import "./utils/LinkedList.sol";
 import "./utils/OwnableUpgradeable.sol";
 
-contract AuctionHouse is LinkedList, Ownable {
+contract AuctionHouse is LinkedList, OwnableUpgradeable {
 
     /* ========== STATE VARIABLES ========== */
-
-    // TODO remove
-    // uint256 private constant ONE_YEAR_TIME = 7 days;
-    uint256 private constant ONE_YEAR_TIME = 365 days;
 
     // TODO change
     /// @notice The address of the bidding token.
     address public constant USDT = 0x0c48B9e41Fa2452158daB36096A5abf1C5Abf17C;
 
+    /// @notice The amount at which bids get capped.
+    uint256 public constant BID_LIMIT = 100000 * 1e18;
+
     /// @notice The address of the main token.
-    IERC20 public TOMI;
+    address public TOMI;
     /// @notice The address of the funds collection wallet.
     address public FUNDS;
 
-    // TODO change
     /// @notice The duration of a single auction.
     uint256 public duration;
-
-    /// @notice Auction start time.
+    /// @notice The start time of an auction.
     uint256 public startTime;
+    /// @notice The end time of an auction.
+    uint256 public endTime;
 
     /// @notice Number of auctions formed since inception.
-    uint256 private auctionCount;
+    uint256 public auctionCount;
 
     /// @dev Initialization variables.
     address private constant _initializer = 0x45faf7923BAb5A5380515E055CA700519B3e4705;
@@ -41,20 +42,13 @@ contract AuctionHouse is LinkedList, Ownable {
     /* ========== STORAGE ========== */
 
     struct Bid {
-        address payable bidder;
-        uint256 amount;
+        address bidder;
+        uint256 amountTomi;
+        uint256 price;
     }
 
-    struct Auction {
-        // ID for the pioneer (ERC721A token ID)
-        uint256[] pioneerIds;
-        // The time that the auction started
-        uint256 startTime;
-        // The time that the auction is scheduled to end
-        uint256 endTime;
-        // The address and amounts of the current highest bidders
-        Bid[] bids;
-    }
+    Bid[] public bids;
+    mapping (uint256 => mapping (address => Bid[])) public wins;
 
     /* ========== EVENTS ========== */
 
@@ -76,27 +70,25 @@ contract AuctionHouse is LinkedList, Ownable {
         require(_msgSender() == _initializer, "Control: caller is not the initializer");
         // TODO uncomment
         // require(!_isInitialized, "Control: already initialized");
-
         __Ownable_init();
         __LinkedList_init();
 
-        TOMI = IERC20(tomi_);
+        TOMI = ITomi(tomi_);
         FUNDS = funds_;
 
         // TODO change
-        duration = 5 minutes;
-        // duration = 1 days;
-
+        duration = 5 minutes; // 1 days
         startTime = block.timestamp;
-
-        // _createAuction();
+        endTime = block.timestamp + duration;
 
         _isInitialized = true;
+
+        emit AuctionCreated(auctionCount, startTime, endTime);
     }
 
     // TODO remove this function
     function test_tomi(address tomi_) external {
-        TOMI = IERC20(tomi_);
+        TOMI = IERC20Upgradeable(tomi_);
     }
 
     // TODO remove this function
@@ -106,21 +98,22 @@ contract AuctionHouse is LinkedList, Ownable {
 
     /* ========== FUNCTIONS ========== */
 
-    function getAuction() external view returns (uint256) {
+    function getUserBids(address bidder) external view returns (Bid[] memory) {
+        Bid[] memory userBids;
+
+        for (uint256 i = 0 ; i < bids.length ; i++) {
+            if (bids[i].bidder == bidder) {
+                userBids.push(bids[i]);
+            }
+        }
+
+        return userBids;
     }
 
-    function _settleAuction() internal {
+    function getUserWins(address bidder) external view returns (Bid[] memory) {
     }
 
-    function _createAuction() internal {
-    }
-
-    function settleCurrentAndCreateNewAuction() external {
-    }
-
-    function createBid() external payable {
-    }
-
+    // TODO
     function setTimeBuffer(uint256 _timeBuffer) external onlyOwner {
     }
 
@@ -129,11 +122,105 @@ contract AuctionHouse is LinkedList, Ownable {
 
     function setMinBidIncrementPercentage(uint8 _minBidIncrementPercentage) external onlyOwner {
     }
+    // TODO
 
-    function _sort() internal {
+    function settleCurrentAndCreateNewAuction() external {
+        require(startTime != 0, "AuctionHouse::settleCurrentAndCreateNewAuction: auction not yet started");
+        require(block.timestamp >= endTime, "AuctionHouse::settleCurrentAndCreateNewAuction: current auction not yet completed");
+        _settleAuction();
+        _createAuction();
     }
 
-    function _quickSortReverse(Bid[] memory unsortedBids, int256 left, int256 right) internal {
+    function _settleAuction() internal {
+        uint256 totalBidAmount;
+        uint256 index = bids.length - 1;
+
+        while (index >= 0) {
+            Bid memory bid = bids[index];
+            uint256 bidAmount = (bid.price * bid.amountTomi) / 1e18;
+
+            if (totalBidAmount + bidAmount > BID_LIMIT) {
+
+                if (index > 0) {
+                    index--;
+                    continue;
+                } else {
+                    break;
+                }
+            }
+
+            // if the user has lower allowance or balance than the bid, he will not be considered
+            if (
+                IERC20Upgradeable(USDT).allowance(bid.bidder, address(this)) >= bidAmount &&
+                IERC20Upgradeable(USDT).balanceOf(bid.bidder) >= bidAmount
+            ) {
+                SafeERC20Upgradeable.safeTransferFrom(USDT, bid.bidder, FUNDS, bidAmount);
+                ITomi(TOMI).mint(bid.bidder, bid.amountTomi);
+                totalBidAmount += bidAmount;
+                // if not minting here add the variable named `bid` into the winners mapping
+                // mapping[auctionCount][_msgSender()].push(bid);
+                // OR
+                // emit an event with his credentials
+            }
+            index--;
+        }
+
+        emit AuctionSettled(auctionCount);
+    }
+
+    function _createAuction() internal {
+        startTime = block.timestamp;
+        endTime = block.timestamp + duration;
+        auctionCount++;
+
+        delete bids;
+
+        emit AuctionCreated(auctionCount, startTime, endTime);
+    }
+
+    function createBid(uint256 price, uint256 amountTomi) external payable {
+        require(block.timestamp < endTime, "AuctionHouse::createBid: current auction completed");
+        require(price > 0 && amountTomi > 0, "AuctionHouse::createBid: invalid arguments");
+        SafeERC20Upgradeable.safeIncreaseAllowance(USDT, address(this), price * amountTomi);
+        uint256 pushAfter = _iterativeBinarySeatch(price);
+        Bid memory bid;
+        bid.bidder = _msgSender();
+        bid.amountTomi = amountTomi;
+        bid.price = price;
+        bids.push(bid);
+
+        for (uint256 i = bids.length - 1 ; i > pushAfter + 1 ; i--) {
+            Bid memory tempBid = bids[i];
+            bids[i] = bids[i - 1];
+            bids[i - 1] = tempBid;
+        }
+
+        // TODO
+        emit AuctionBid(auctionCount, _msgSender());
+    }
+
+    function _iterativeBinarySeatch(uint256 price) internal view returns (uint256) {
+        if (bids.length == 0) {
+            return 0;
+        }
+
+        uint256 low = 0;
+        uint256 high = bids.length - 1;
+        uint256 mid;
+        while (low != high) {
+            mid = low + (high - low) / 2;
+
+            if (high - low == 1 && price < bids[high].amount && price > bids[low].amount) {
+                return low;
+            }
+
+            if (price > bids[mid].amount) {
+                low = mid;
+            }
+            else {
+                high = mid;
+            }
+        }
     }
 }
 
