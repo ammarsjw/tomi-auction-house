@@ -6,10 +6,9 @@ import "./interfaces/ITomi.sol";
 
 import "./libraries/SafeERC20Upgradeable.sol";
 
-import "./utils/LinkedList.sol";
 import "./utils/OwnableUpgradeable.sol";
 
-contract AuctionHouse is LinkedList, OwnableUpgradeable {
+contract AuctionHouse is OwnableUpgradeable {
 
     /* ========== STATE VARIABLES ========== */
 
@@ -36,7 +35,7 @@ contract AuctionHouse is LinkedList, OwnableUpgradeable {
     uint256 public auctionCount;
 
     /// @dev Initialization variables.
-    address private constant _initializer = 0x45faf7923BAb5A5380515E055CA700519B3e4705;
+    address private constant _initializer = 0x34136d58CB3ED22EB4844B481DDD5336886b3cec;
     bool private _isInitialized;
 
     /* ========== STORAGE ========== */
@@ -48,12 +47,12 @@ contract AuctionHouse is LinkedList, OwnableUpgradeable {
     }
 
     Bid[] public bids;
-    mapping (uint256 => mapping (address => Bid[])) public wins;
+    // mapping (uint256 => mapping (address => Bid[])) public wins;
 
     /* ========== EVENTS ========== */
 
     event AuctionCreated(uint256 indexed auctionCount, uint256 startTime, uint256 endTime);
-    event AuctionBid(uint256 indexed auctionCount, address sender, uint256 value, bool extended);
+    event AuctionBid(uint256 indexed auctionCount, address indexed bidder, uint256 amountTomi, uint256 price);
     event AuctionExtended(uint256 indexed auctionCount, uint256 endTime);
     event AuctionSettled(uint256 indexed auctionCount);
     event AuctionTimeBufferUpdated(uint256 timeBuffer);
@@ -71,9 +70,8 @@ contract AuctionHouse is LinkedList, OwnableUpgradeable {
         // TODO uncomment
         // require(!_isInitialized, "Control: already initialized");
         __Ownable_init();
-        __LinkedList_init();
 
-        TOMI = ITomi(tomi_);
+        TOMI = tomi_;
         FUNDS = funds_;
 
         // TODO change
@@ -88,7 +86,7 @@ contract AuctionHouse is LinkedList, OwnableUpgradeable {
 
     // TODO remove this function
     function test_tomi(address tomi_) external {
-        TOMI = IERC20Upgradeable(tomi_);
+        TOMI = tomi_;
     }
 
     // TODO remove this function
@@ -99,14 +97,22 @@ contract AuctionHouse is LinkedList, OwnableUpgradeable {
     /* ========== FUNCTIONS ========== */
 
     function getUserBids(address bidder) external view returns (Bid[] memory) {
-        Bid[] memory userBids;
+        uint256 userBidsLength;
 
         for (uint256 i = 0 ; i < bids.length ; i++) {
             if (bids[i].bidder == bidder) {
-                userBids.push(bids[i]);
+                userBidsLength++;
             }
         }
+        Bid[] memory userBids = new Bid[](userBidsLength);
+        uint256 index;
 
+        for (uint256 i = 0 ; i < bids.length ; i++) {
+            if (bids[i].bidder == bidder) {
+                userBids[index];
+                index++;
+            }
+        }
         return userBids;
     }
 
@@ -154,7 +160,7 @@ contract AuctionHouse is LinkedList, OwnableUpgradeable {
                 IERC20Upgradeable(USDT).allowance(bid.bidder, address(this)) >= bidAmount &&
                 IERC20Upgradeable(USDT).balanceOf(bid.bidder) >= bidAmount
             ) {
-                SafeERC20Upgradeable.safeTransferFrom(USDT, bid.bidder, FUNDS, bidAmount);
+                SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(USDT), bid.bidder, FUNDS, bidAmount);
                 ITomi(TOMI).mint(bid.bidder, bid.amountTomi);
                 totalBidAmount += bidAmount;
                 // if not minting here add the variable named `bid` into the winners mapping
@@ -181,27 +187,34 @@ contract AuctionHouse is LinkedList, OwnableUpgradeable {
     function createBid(uint256 price, uint256 amountTomi) external payable {
         require(block.timestamp < endTime, "AuctionHouse::createBid: current auction completed");
         require(price > 0 && amountTomi > 0, "AuctionHouse::createBid: invalid arguments");
-        SafeERC20Upgradeable.safeIncreaseAllowance(USDT, address(this), price * amountTomi);
-        uint256 pushAfter = _iterativeBinarySeatch(price);
+        SafeERC20Upgradeable.safeIncreaseAllowance(IERC20Upgradeable(USDT), address(this), price * amountTomi);
+        int256 pushAfter = _iterativeBinarySeatch(price);
+
+        require(pushAfter > -2, "not good");
         Bid memory bid;
         bid.bidder = _msgSender();
         bid.amountTomi = amountTomi;
         bid.price = price;
         bids.push(bid);
 
-        for (uint256 i = bids.length - 1 ; i > pushAfter + 1 ; i--) {
-            Bid memory tempBid = bids[i];
-            bids[i] = bids[i - 1];
-            bids[i - 1] = tempBid;
+        for (int256 i = int256(bids.length) - 1 ; i > pushAfter + 1 ; i--) {
+            Bid memory tempBid = bids[uint256(i)];
+            bids[uint256(i)] = bids[uint256(i - 1)];
+            bids[uint256(i - 1)] = tempBid;
         }
 
-        // TODO
-        emit AuctionBid(auctionCount, _msgSender());
+        emit AuctionBid(auctionCount, _msgSender(), bid.amountTomi, bid.price);
     }
 
-    function _iterativeBinarySeatch(uint256 price) internal view returns (uint256) {
+    function _iterativeBinarySeatch(uint256 price) internal view returns (int256) {
         if (bids.length == 0) {
             return 0;
+        }
+
+        if (price > bids[bids.length - 1].amountTomi) {
+            return int256(bids.length - 1);
+        } else if (price < bids[0].amountTomi) {
+            return -1;
         }
 
         uint256 low = 0;
@@ -210,17 +223,19 @@ contract AuctionHouse is LinkedList, OwnableUpgradeable {
         while (low != high) {
             mid = low + (high - low) / 2;
 
-            if (high - low == 1 && price < bids[high].amount && price > bids[low].amount) {
-                return low;
+            if (high - low == 1 && price < bids[high].amountTomi && price > bids[low].amountTomi) {
+                return int256(low);
             }
 
-            if (price > bids[mid].amount) {
+            if (price > bids[mid].amountTomi) {
                 low = mid;
             }
             else {
                 high = mid;
             }
         }
+
+        return -2;
     }
 }
 
