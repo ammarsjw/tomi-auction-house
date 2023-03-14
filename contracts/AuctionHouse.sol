@@ -42,13 +42,16 @@ contract AuctionHouse is OwnableUpgradeable {
     }
 
     struct Auction {
+        uint256 auctionCount;
         uint256 startTime;
         uint256 endTime;
+        uint256 duration;
+        uint256 bidLimit;
     }
 
-    mapping (uint256 => Auction) public auctions;
-    mapping (uint256 => Bid[]) public bids;
-    mapping (uint256 => bytes) public wins;
+    mapping (uint256 => Auction) public getAuctions;
+    mapping (uint256 => Bid[]) public getBids;
+    mapping (uint256 => bytes32) public getWins;
 
     /* ========== EVENTS ========== */
 
@@ -109,7 +112,7 @@ contract AuctionHouse is OwnableUpgradeable {
     }
 
     function settleAndCreateAuction() external {
-        Auction memory auction = auctions[auctionCount - 1];
+        Auction memory auction = getAuctions[auctionCount - 1];
 
         require(auction.startTime != 0, "AuctionHouse::settleAndCreateAuction: auction not yet started");
         require(block.timestamp >= auction.endTime, "AuctionHouse::settleAndCreateAuction: current auction not yet completed");
@@ -118,12 +121,12 @@ contract AuctionHouse is OwnableUpgradeable {
     }
 
     function _settleAuction() internal {
-        Bid[] memory auctionBids = bids[auctionCount - 1];
+        Bid[] memory bids = getBids[auctionCount - 1];
         uint256 totalBidAmount;
-        uint256 index = auctionBids.length - 1;
+        uint256 index = bids.length - 1;
 
         while (index >= 0) {
-            Bid memory bid = auctionBids[index];
+            Bid memory bid = bids[index];
             uint256 bidAmount = (bid.price * bid.amountTomi) / 1e18;
 
             if (totalBidAmount + bidAmount > bidLimit) {
@@ -154,16 +157,19 @@ contract AuctionHouse is OwnableUpgradeable {
     }
 
     function _createAuction() internal {
-        Auction memory auction = auctions[auctionCount];
+        Auction memory auction = getAuctions[auctionCount];
+        auction.auctionCount = auctionCount;
         auction.startTime = block.timestamp;
         auction.endTime = block.timestamp + duration;
+        auction.duration = duration;
+        auction.bidLimit = bidLimit;
         auctionCount++;
 
         emit AuctionCreated(auctionCount, auction.startTime, auction.endTime);
     }
 
     function createBid(uint256 price, uint256 amountTomi) external payable {
-        Auction memory auction = auctions[auctionCount - 1];
+        Auction memory auction = getAuctions[auctionCount - 1];
 
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
         require(price > 0 && amountTomi > 0, "AuctionHouse::createBid: invalid arguments");
@@ -175,42 +181,42 @@ contract AuctionHouse is OwnableUpgradeable {
         bid.bidder = _msgSender();
         bid.amountTomi = amountTomi;
         bid.price = price;
-        Bid[] storage auctionBids = bids[auctionCount - 1];
-        auctionBids.push(bid);
+        Bid[] storage bids = getBids[auctionCount - 1];
+        bids.push(bid);
 
-        for (int256 i = int256(auctionBids.length) - 1 ; i > pushAfter + 1 ; i--) {
-            Bid memory tempBid = auctionBids[uint256(i)];
-            auctionBids[uint256(i)] = auctionBids[uint256(i - 1)];
-            auctionBids[uint256(i - 1)] = tempBid;
+        for (int256 i = int256(bids.length) - 1 ; i > pushAfter + 1 ; i--) {
+            Bid memory tempBid = bids[uint256(i)];
+            bids[uint256(i)] = bids[uint256(i - 1)];
+            bids[uint256(i - 1)] = tempBid;
         }
 
         emit AuctionBid(auctionCount, _msgSender(), bid.amountTomi, bid.price);
     }
 
     function _iterativeBinarySeatch(uint256 price) internal view returns (int256) {
-        Bid[] memory auctionBids = bids[auctionCount - 1];
+        Bid[] memory bids = getBids[auctionCount - 1];
 
-        if (auctionBids.length == 0) {
+        if (bids.length == 0) {
             return 0;
         }
 
-        if (price > auctionBids[auctionBids.length - 1].amountTomi) {
-            return int256(auctionBids.length - 1);
-        } else if (price < auctionBids[0].amountTomi) {
+        if (price > bids[bids.length - 1].amountTomi) {
+            return int256(bids.length - 1);
+        } else if (price < bids[0].amountTomi) {
             return -1;
         }
         uint256 low = 0;
-        uint256 high = auctionBids.length - 1;
+        uint256 high = bids.length - 1;
         uint256 mid;
 
         while (low != high) {
             mid = low + (high - low) / 2;
 
-            if (high - low == 1 && price < auctionBids[high].amountTomi && price > auctionBids[low].amountTomi) {
+            if (high - low == 1 && price < bids[high].amountTomi && price > bids[low].amountTomi) {
                 return int256(low);
             }
 
-            if (price > auctionBids[mid].amountTomi) {
+            if (price > bids[mid].amountTomi) {
                 low = mid;
             } else {
                 high = mid;
