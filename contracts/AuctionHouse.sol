@@ -43,10 +43,12 @@ contract AuctionHouse is OwnableUpgradeable {
 
     struct Auction {
         uint256 auctionCount;
+        bool status;
         uint256 startTime;
         uint256 endTime;
         uint256 duration;
         uint256 bidLimit;
+        uint256 bidCount;
     }
 
     mapping (uint256 => Auction) public getAuctions;
@@ -57,11 +59,11 @@ contract AuctionHouse is OwnableUpgradeable {
 
     event AuctionCreated(uint256 indexed auctionCount, uint256 startTime, uint256 endTime);
     event AuctionBid(uint256 indexed auctionCount, address indexed bidder, uint256 amountTomi, uint256 price);
-    event AuctionExtended(uint256 indexed auctionCount, uint256 endTime);
+    // event AuctionExtended(uint256 indexed auctionCount, uint256 endTime);
     event AuctionSettled(uint256 indexed auctionCount);
-    event AuctionTimeBufferUpdated(uint256 timeBuffer);
-    event AuctionReservePriceUpdated(uint256 reservePrice);
-    event AuctionMinBidIncrementPercentageUpdated(uint256 minBidIncrementPercentage);
+    // event AuctionTimeBufferUpdated(uint256 timeBuffer);
+    event AuctionDurationUpdated(uint256 duration);
+    event AuctionBidLimitUpdated(uint256 bidLimit);
 
     /* ========== INITIALIZE ========== */
 
@@ -105,129 +107,96 @@ contract AuctionHouse is OwnableUpgradeable {
 
     function setDuration(uint256 duration_) external onlyOwner {
         duration = duration_;
+
+        emit AuctionDurationUpdated(duration);
     }
 
     function setBidLimit(uint256 bidLimit_) external onlyOwner {
         bidLimit = bidLimit_;
+
+        emit AuctionBidLimitUpdated(bidLimit);
     }
 
-    function settleAndCreateAuction() external {
+    function settleAndCreateAuction(bytes32 root) external {
         Auction memory auction = getAuctions[auctionCount - 1];
 
         require(auction.startTime != 0, "AuctionHouse::settleAndCreateAuction: auction not yet started");
         require(block.timestamp >= auction.endTime, "AuctionHouse::settleAndCreateAuction: current auction not yet completed");
-        _settleAuction();
+        _settleAuction(root);
         _createAuction();
     }
 
-    function _settleAuction() internal {
-        Bid[] memory bids = getBids[auctionCount - 1];
-        uint256 totalBidAmount;
-        uint256 index = bids.length - 1;
-
-        while (index >= 0) {
-            Bid memory bid = bids[index];
-            uint256 bidAmount = (bid.price * bid.amountTomi) / 1e18;
-
-            if (totalBidAmount + bidAmount > bidLimit) {
-
-                if (index > 0) {
-                    index--;
-                    continue;
-                } else {
-                    break;
-                }
-            }
-
-            if (USDT.allowance(bid.bidder, address(this)) >= bidAmount && USDT.balanceOf(bid.bidder) >= bidAmount) {
-                // if the user has lower allowance or balance than the bid, he will not be considered
-                SafeERC20Upgradeable.safeTransferFrom(USDT, bid.bidder, FUNDS, bidAmount);
-                TOMI.mint(bid.bidder, bid.amountTomi);
-                totalBidAmount += bidAmount;
-                // if not minting here add the variable named `bid` into the winners mapping
-                // mapping[auctionCount][_msgSender()].push(bid);
-                // OR
-                // emit an event with his credentials
-            }
-
-            if (index > 0) index--;
-        }
+    function _settleAuction(bytes32 root) internal {
+        getWins[auctionCount - 1] = root;
 
         emit AuctionSettled(auctionCount);
     }
 
     function _createAuction() internal {
-        Auction memory auction = getAuctions[auctionCount];
+        Auction storage auction = getAuctions[auctionCount];
         auction.auctionCount = auctionCount;
         auction.startTime = block.timestamp;
         auction.endTime = block.timestamp + duration;
         auction.duration = duration;
         auction.bidLimit = bidLimit;
+        // auction.bidCount = 0;
         auctionCount++;
 
         emit AuctionCreated(auctionCount, auction.startTime, auction.endTime);
     }
 
     function createBid(uint256 price, uint256 amountTomi) external payable {
-        Auction memory auction = getAuctions[auctionCount - 1];
+        Auction storage auction = getAuctions[auctionCount - 1];
 
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
         require(price > 0 && amountTomi > 0, "AuctionHouse::createBid: invalid arguments");
         SafeERC20Upgradeable.safeIncreaseAllowance(USDT, address(this), price * amountTomi);
-        int256 pushAfter = _iterativeBinarySeatch(price);
-
-        require(pushAfter > -2, "not good");
         Bid memory bid;
         bid.bidder = _msgSender();
         bid.amountTomi = amountTomi;
         bid.price = price;
         Bid[] storage bids = getBids[auctionCount - 1];
         bids.push(bid);
-
-        for (int256 i = int256(bids.length) - 1 ; i > pushAfter + 1 ; i--) {
-            Bid memory tempBid = bids[uint256(i)];
-            bids[uint256(i)] = bids[uint256(i - 1)];
-            bids[uint256(i - 1)] = tempBid;
-        }
+        auction.bidCount = bids.length;
 
         emit AuctionBid(auctionCount, _msgSender(), bid.amountTomi, bid.price);
     }
 
-    function _iterativeBinarySeatch(uint256 price) internal view returns (int256) {
-        Bid[] memory bids = getBids[auctionCount - 1];
-
-        if (bids.length == 0) {
-            return 0;
-        }
-
-        if (price > bids[bids.length - 1].amountTomi) {
-            return int256(bids.length - 1);
-        } else if (price < bids[0].amountTomi) {
-            return -1;
-        }
-        uint256 low = 0;
-        uint256 high = bids.length - 1;
-        uint256 mid;
-
-        while (low != high) {
-            mid = low + (high - low) / 2;
-
-            if (high - low == 1 && price < bids[high].amountTomi && price > bids[low].amountTomi) {
-                return int256(low);
-            }
-
-            if (price > bids[mid].amountTomi) {
-                low = mid;
-            } else {
-                high = mid;
-            }
-        }
-
-        return -2;
-    }
+    // TODO claim
+    // TODO cancel bid
+    // TODO bid time buffer?
+    // TODO events change?
+    // TODO comments
 }
 
-// TODO cancelBid - remove approval, pop from linkedlist
-// TODO linked list
-// TODO events
-// TODO comments
+    // Bid[] memory bids = getBids[auctionCount - 1];
+        // uint256 totalBidAmount;
+        // uint256 index = bids.length - 1;
+
+        // while (index >= 0) {
+        //     Bid memory bid = bids[index];
+        //     uint256 bidAmount = (bid.price * bid.amountTomi) / 1e18;
+
+        //     if (totalBidAmount + bidAmount > bidLimit) {
+
+        //         if (index > 0) {
+        //             index--;
+        //             continue;
+        //         } else {
+        //             break;
+        //         }
+        //     }
+
+        //     if (USDT.allowance(bid.bidder, address(this)) >= bidAmount && USDT.balanceOf(bid.bidder) >= bidAmount) {
+        //         // if the user has lower allowance or balance than the bid, he will not be considered
+        //         SafeERC20Upgradeable.safeTransferFrom(USDT, bid.bidder, FUNDS, bidAmount);
+        //         TOMI.mint(bid.bidder, bid.amountTomi);
+        //         totalBidAmount += bidAmount;
+        //         // if not minting here add the variable named `bid` into the winners mapping
+        //         // mapping[auctionCount][_msgSender()].push(bid);
+        //         // OR
+        //         // emit an event with his credentials
+        //     }
+
+        //     if (index > 0) index--;
+        // }
