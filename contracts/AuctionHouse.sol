@@ -13,14 +13,17 @@ contract AuctionHouse is OwnableUpgradeable {
 
     /* ========== STATE VARIABLES ========== */
 
-    // TODO change
-    /// @notice The address of the bidding token.
-    IERC20Upgradeable public constant USDT = IERC20Upgradeable(0x0c48B9e41Fa2452158daB36096A5abf1C5Abf17C);
-
     /// @notice The address of the main token.
     ITomi public TOMI;
     /// @notice The address of the funds collection wallet.
     address public FUNDS;
+    /// @notice The address of the governance dao.
+    address public DAO;
+    /// @notice The address of the team wallet.
+    address public TEAM;
+
+    /// @notice The addresses of the bidding token.
+    address[2] public biddingTokens;
 
     /// @notice The duration of a single auction.
     uint256 public duration;
@@ -41,11 +44,13 @@ contract AuctionHouse is OwnableUpgradeable {
         address bidder;
         uint256 price;
         uint256 amountTomi;
+        bool status;
+        bool isClaimed;
+        uint8 tokenType;
     }
 
     struct Auction {
         uint256 auctionIndex;
-        bool status;
         uint256 startTime;
         uint256 endTime;
         uint256 duration;
@@ -54,18 +59,20 @@ contract AuctionHouse is OwnableUpgradeable {
     }
 
     mapping (uint256 => Auction) public getAuctions;
-    mapping (uint256 => Bid[]) public getBids;
+    mapping (uint256 => mapping (uint256 => Bid)) public getBids;
     mapping (uint256 => bytes32) public getWins;
 
     /* ========== EVENTS ========== */
 
     event AuctionCreated(uint256 indexed auctionIndex, uint256 startTime, uint256 endTime);
-    event AuctionBid(uint256 indexed auctionIndex, uint256 indexed bidIndex, address bidder, uint256 price, uint256 amountTomi);
-    // event AuctionExtended(uint256 indexed auctionIndex, uint256 endTime);
+    event AuctionBid(uint256 indexed auctionIndex, uint256 bidIndex, address bidder, uint256 price, uint256 amountTomi, address token);
+    event AuctionCancelBid(uint256 indexed auctionIndex, uint256 bidIndex, address bidder);
+    event AuctionClaim(uint256 indexed auctionIndex, uint256 bidIndex, address bidder);
     event AuctionSettled(uint256 indexed auctionIndex);
-    // event AuctionTimeBufferUpdated(uint256 timeBuffer);
     event AuctionDurationUpdated(uint256 duration);
     event AuctionBidLimitUpdated(uint256 bidLimit);
+    event AuctionFundsWalletUpdated(address funds);
+    event AuctionTeamWalletUpdated(address team);
 
     /* ========== INITIALIZE ========== */
 
@@ -73,7 +80,7 @@ contract AuctionHouse is OwnableUpgradeable {
      * @notice Initialize the auction house and base contracts and populate configuration values.
      * @dev This function can only be called once.
      */
-    function initialize(address tomi_, address funds_) external initializer {
+    function initialize(address tomi_, address funds_, address dao_, address team_) external initializer {
         require(_msgSender() == _initializer, "Control: caller is not the initializer");
         // TODO uncomment
         // require(!_isInitialized, "Control: already initialized");
@@ -81,6 +88,14 @@ contract AuctionHouse is OwnableUpgradeable {
 
         TOMI = ITomi(tomi_);
         FUNDS = funds_;
+        DAO = dao_;
+        TEAM = team_;
+
+        // TODO change
+        biddingTokens = [
+            0x1092d50E8E14479bB769b687427B72BeE70c9534,  // USDC
+            0x1092d50E8E14479bB769b687427B72BeE70c9534   // USDT
+        ];
 
         // TODO change
         duration = 5 minutes; // 1 days
@@ -107,19 +122,31 @@ contract AuctionHouse is OwnableUpgradeable {
     // function getUserWins(address bidder) external view returns (Bid[] memory) {
     // }
 
+    function setFundsWallet(address funds_) external onlyOwner {
+        FUNDS = funds_;
+
+        emit AuctionFundsWalletUpdated(funds_);
+    }
+
+    function setTeamWallet(address team_) external onlyOwner {
+        TEAM = team_;
+
+        emit AuctionTeamWalletUpdated(team_);
+    }
+
     function setDuration(uint256 duration_) external onlyOwner {
         duration = duration_;
 
-        emit AuctionDurationUpdated(duration);
+        emit AuctionDurationUpdated(duration_);
     }
 
     function setBidLimit(uint256 bidLimit_) external onlyOwner {
         bidLimit = bidLimit_;
 
-        emit AuctionBidLimitUpdated(bidLimit);
+        emit AuctionBidLimitUpdated(bidLimit_);
     }
 
-    function settleAndCreateAuction(bytes32 root) external {
+    function settleAndCreateAuction(bytes32 root) external onlyOwner {
         uint256 auctionIndex = auctionCount - 1;
         Auction memory auction = getAuctions[auctionIndex];
 
@@ -132,6 +159,10 @@ contract AuctionHouse is OwnableUpgradeable {
     function _settleAuction(bytes32 root) internal {
         uint256 auctionIndex = auctionCount - 1;
         getWins[auctionIndex] = root;
+        // minting to the DAO.
+        TOMI.mint(DAO, 100000 * 1e18);
+        // minting to the Team Wallet.
+        TOMI.mint(TEAM, 80000 * 1e18);
 
         emit AuctionSettled(auctionCount);
     }
@@ -150,105 +181,61 @@ contract AuctionHouse is OwnableUpgradeable {
         emit AuctionCreated(auction.auctionIndex, auction.startTime, auction.endTime);
     }
 
-    function createBid(uint256 price, uint256 amountTomi) external {
+    function createBid(uint256 price, uint256 amountTomi, uint8 tokenType) external {
+        require(tokenType < biddingTokens.length, "AuctionHouse::createBid: invalid token type");
         uint256 auctionIndex = auctionCount - 1;
         Auction storage auction = getAuctions[auctionIndex];
+        IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[tokenType]);
+        uint256 amount = (price * amountTomi) / 10 ** (18 + (18 - token.decimals()));
 
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
         require(price > 0, "AuctionHouse::createBid: invalid price");
-        require(0 < amountTomi && amountTomi < auction.bidLimit, "AuctionHouse::createBid: invalid amountTomi");
-        SafeERC20Upgradeable.safeIncreaseAllowance(USDT, address(this), price * amountTomi);
-        Bid[] storage bids = getBids[auctionIndex];
+        require(0 < amountTomi && amountTomi < auction.bidLimit, "AuctionHouse::createBid: invalid amount tomi");
+        require(
+            token.allowance(_msgSender(), address(this)) >= amount &&
+            token.balanceOf(_msgSender()) >= amount,
+            "AuctionHouse::createBid: insufficient allowance or balance"
+        );
         Bid memory bid;
-        bid.bidIndex = bids.length;
+        bid.bidIndex = auction.bidCount;
         bid.bidder = _msgSender();
         bid.price = price;
         bid.amountTomi = amountTomi;
-        bids.push(bid);
-        auction.bidCount = bids.length;
+        bid.status = true;
+        // bid.isClaimed = false;
+        bid.tokenType = tokenType;
+        getBids[auctionIndex][bid.bidIndex] = bid;
+        auction.bidCount++;
 
-        emit AuctionBid(auctionIndex, bid.bidIndex, bid.bidder, bid.price, bid.amountTomi);
+        emit AuctionBid(auctionIndex, bid.bidIndex, bid.bidder, bid.price, bid.amountTomi, address(token));
     }
 
-    function claim(uint256 auction) external {
-        // bytes32 node = keccak256(abi.encodePacked(msg.sender, quantity));
-        // require(MerkleProof.verify(merkleProof, merkleRoot, node), 'invalid proof');
+    function cancelBid(uint256 bidIndex) external {
+        uint256 auctionIndex = auctionCount - 1;
+        Bid memory bid = getBids[auctionIndex][bidIndex];
+
+        require(bid.status, "AuctionHouse::cancelBid: invalid bidIndex");
+        require(_msgSender() == bid.bidder, "AuctionHouse::cancelBid: caller is not the bidder");
+        delete getBids[auctionIndex][bidIndex];
+
+        emit AuctionCancelBid(auctionIndex, bid.bidIndex, bid.bidder);
     }
 
-    function verifyCalldata(
-        bytes32[] calldata proof,
-        bytes32 root,
-        bytes32 leaf
-    ) internal pure returns (bool) {
-        return processProofCalldata(proof, leaf) == root;
+    function claim(uint256 auctionIndex, uint256 bidIndex, bytes32[] calldata merkleProof) external {
+        bytes32 node = keccak256(abi.encodePacked(auctionIndex, _msgSender(), bidIndex));
+        Bid storage bid = getBids[auctionIndex][bidIndex];
+
+        require(MerkleProof.verify(merkleProof, getWins[auctionIndex], node), "AuctionHouse::claim: invalid proof");
+        require(!bid.isClaimed, "AuctionHouse::claim: already claimed");
+        bid.isClaimed = true;
+        IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[bid.tokenType]);
+        uint256 amount = (bid.price * bid.amountTomi) / 10 ** (18 + (18 - token.decimals()));
+        SafeERC20Upgradeable.safeTransferFrom(token, _msgSender(), FUNDS, amount);
+        TOMI.mint(_msgSender(), bid.amountTomi);
+
+        emit AuctionClaim(auctionIndex, bid.bidIndex, bid.bidder);
     }
 
-    function processProofCalldata(
-        bytes32[] calldata proof,
-        bytes32 leaf
-    ) internal pure returns (bytes32) {
-        bytes32 computedHash = leaf;
-        for (uint256 i = 0; i < proof.length; i++) {
-            computedHash = _hashPair(computedHash, proof[i]);
-        }
-        return computedHash;
-    }
-
-    function _hashPair(bytes32 a, bytes32 b)
-        private
-        pure
-        returns(bytes32)
-    {
-        return a < b ? _efficientHash(a, b) : _efficientHash(b, a);
-    }
-
-    function _efficientHash(bytes32 a, bytes32 b)
-        private
-        pure
-        returns (bytes32 value)
-    {
-        assembly {
-            mstore(0x00, a)
-            mstore(0x20, b)
-            value := keccak256(0x00, 0x40)
-        }
-    }
-
-    // TODO claim
-    // TODO cancel bid
-    // TODO bid causes auction extension?
-    // TODO events change?
     // TODO comments
+    // TODO clean
 }
-
-    // Bid[] memory bids = getBids[auctionCount - 1];
-        // uint256 totalBidAmount;
-        // uint256 index = bids.length - 1;
-
-        // while (index >= 0) {
-        //     Bid memory bid = bids[index];
-        //     uint256 bidAmount = (bid.price * bid.amountTomi) / 1e18;
-
-        //     if (totalBidAmount + bidAmount > bidLimit) {
-
-        //         if (index > 0) {
-        //             index--;
-        //             continue;
-        //         } else {
-        //             break;
-        //         }
-        //     }
-
-        //     if (USDT.allowance(bid.bidder, address(this)) >= bidAmount && USDT.balanceOf(bid.bidder) >= bidAmount) {
-        //         // if the user has lower allowance or balance than the bid, he will not be considered
-        //         SafeERC20Upgradeable.safeTransferFrom(USDT, bid.bidder, FUNDS, bidAmount);
-        //         TOMI.mint(bid.bidder, bid.amountTomi);
-        //         totalBidAmount += bidAmount;
-        //         // if not minting here add the variable named `bid` into the winners mapping
-        //         // mapping[auctionCount][_msgSender()].push(bid);
-        //         // OR
-        //         // emit an event with his credentials
-        //     }
-
-        //     if (index > 0) index--;
-        // }
