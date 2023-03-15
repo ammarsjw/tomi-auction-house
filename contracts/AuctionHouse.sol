@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 
 import "./interfaces/ITomi.sol";
 
+import "./libraries/MerkleProof.sol";
 import "./libraries/SafeERC20Upgradeable.sol";
 
 import "./utils/OwnableUpgradeable.sol";
@@ -36,13 +37,14 @@ contract AuctionHouse is OwnableUpgradeable {
     /* ========== STORAGE ========== */
 
     struct Bid {
+        uint256 bidIndex;
         address bidder;
-        uint256 amountTomi;
         uint256 price;
+        uint256 amountTomi;
     }
 
     struct Auction {
-        uint256 auctionCount;
+        uint256 auctionIndex;
         bool status;
         uint256 startTime;
         uint256 endTime;
@@ -57,10 +59,10 @@ contract AuctionHouse is OwnableUpgradeable {
 
     /* ========== EVENTS ========== */
 
-    event AuctionCreated(uint256 indexed auctionCount, uint256 startTime, uint256 endTime);
-    event AuctionBid(uint256 indexed auctionCount, address indexed bidder, uint256 amountTomi, uint256 price);
-    // event AuctionExtended(uint256 indexed auctionCount, uint256 endTime);
-    event AuctionSettled(uint256 indexed auctionCount);
+    event AuctionCreated(uint256 indexed auctionIndex, uint256 startTime, uint256 endTime);
+    event AuctionBid(uint256 indexed auctionIndex, uint256 indexed bidIndex, address bidder, uint256 price, uint256 amountTomi);
+    // event AuctionExtended(uint256 indexed auctionIndex, uint256 endTime);
+    event AuctionSettled(uint256 indexed auctionIndex);
     // event AuctionTimeBufferUpdated(uint256 timeBuffer);
     event AuctionDurationUpdated(uint256 duration);
     event AuctionBidLimitUpdated(uint256 bidLimit);
@@ -118,7 +120,8 @@ contract AuctionHouse is OwnableUpgradeable {
     }
 
     function settleAndCreateAuction(bytes32 root) external {
-        Auction memory auction = getAuctions[auctionCount - 1];
+        uint256 auctionIndex = auctionCount - 1;
+        Auction memory auction = getAuctions[auctionIndex];
 
         require(auction.startTime != 0, "AuctionHouse::settleAndCreateAuction: auction not yet started");
         require(block.timestamp >= auction.endTime, "AuctionHouse::settleAndCreateAuction: current auction not yet completed");
@@ -127,44 +130,93 @@ contract AuctionHouse is OwnableUpgradeable {
     }
 
     function _settleAuction(bytes32 root) internal {
-        getWins[auctionCount - 1] = root;
+        uint256 auctionIndex = auctionCount - 1;
+        getWins[auctionIndex] = root;
 
         emit AuctionSettled(auctionCount);
     }
 
     function _createAuction() internal {
-        Auction storage auction = getAuctions[auctionCount];
-        auction.auctionCount = auctionCount;
+        Auction memory auction;
+        auction.auctionIndex = auctionCount;
         auction.startTime = block.timestamp;
         auction.endTime = block.timestamp + duration;
         auction.duration = duration;
         auction.bidLimit = bidLimit;
         // auction.bidCount = 0;
+        getAuctions[auctionCount] = auction;
         auctionCount++;
 
-        emit AuctionCreated(auctionCount, auction.startTime, auction.endTime);
+        emit AuctionCreated(auction.auctionIndex, auction.startTime, auction.endTime);
     }
 
-    function createBid(uint256 price, uint256 amountTomi) external payable {
-        Auction storage auction = getAuctions[auctionCount - 1];
+    function createBid(uint256 price, uint256 amountTomi) external {
+        uint256 auctionIndex = auctionCount - 1;
+        Auction storage auction = getAuctions[auctionIndex];
 
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
-        require(price > 0 && amountTomi > 0, "AuctionHouse::createBid: invalid arguments");
+        require(price > 0, "AuctionHouse::createBid: invalid price");
+        require(0 < amountTomi && amountTomi < auction.bidLimit, "AuctionHouse::createBid: invalid amountTomi");
         SafeERC20Upgradeable.safeIncreaseAllowance(USDT, address(this), price * amountTomi);
+        Bid[] storage bids = getBids[auctionIndex];
         Bid memory bid;
+        bid.bidIndex = bids.length;
         bid.bidder = _msgSender();
-        bid.amountTomi = amountTomi;
         bid.price = price;
-        Bid[] storage bids = getBids[auctionCount - 1];
+        bid.amountTomi = amountTomi;
         bids.push(bid);
         auction.bidCount = bids.length;
 
-        emit AuctionBid(auctionCount, _msgSender(), bid.amountTomi, bid.price);
+        emit AuctionBid(auctionIndex, bid.bidIndex, bid.bidder, bid.price, bid.amountTomi);
+    }
+
+    function claim(uint256 auction) external {
+        // bytes32 node = keccak256(abi.encodePacked(msg.sender, quantity));
+        // require(MerkleProof.verify(merkleProof, merkleRoot, node), 'invalid proof');
+    }
+
+    function verifyCalldata(
+        bytes32[] calldata proof,
+        bytes32 root,
+        bytes32 leaf
+    ) internal pure returns (bool) {
+        return processProofCalldata(proof, leaf) == root;
+    }
+
+    function processProofCalldata(
+        bytes32[] calldata proof,
+        bytes32 leaf
+    ) internal pure returns (bytes32) {
+        bytes32 computedHash = leaf;
+        for (uint256 i = 0; i < proof.length; i++) {
+            computedHash = _hashPair(computedHash, proof[i]);
+        }
+        return computedHash;
+    }
+
+    function _hashPair(bytes32 a, bytes32 b)
+        private
+        pure
+        returns(bytes32)
+    {
+        return a < b ? _efficientHash(a, b) : _efficientHash(b, a);
+    }
+
+    function _efficientHash(bytes32 a, bytes32 b)
+        private
+        pure
+        returns (bytes32 value)
+    {
+        assembly {
+            mstore(0x00, a)
+            mstore(0x20, b)
+            value := keccak256(0x00, 0x40)
+        }
     }
 
     // TODO claim
     // TODO cancel bid
-    // TODO bid time buffer?
+    // TODO bid causes auction extension?
     // TODO events change?
     // TODO comments
 }
