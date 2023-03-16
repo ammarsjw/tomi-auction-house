@@ -98,7 +98,7 @@ contract AuctionHouse is OwnableUpgradeable {
         // TODO change
         biddingTokens = [
             0x1092d50E8E14479bB769b687427B72BeE70c9534,  // USDC
-            0x1092d50E8E14479bB769b687427B72BeE70c9534   // USDT
+            0x22d2634beC4fE8C2A1292958Cff85edb78dE3E77   // USDT
         ];
 
         // TODO change
