@@ -17,12 +17,12 @@ contract AuctionHouse is OwnableUpgradeable {
     ITomi public TOMI;
     /// @notice The address of the funds collection wallet.
     address public FUNDS;
-    /// @notice The address of the governance dao.
+    /// @notice The address of the governance contract.
     address public DAO;
     /// @notice The address of the team wallet.
     address public TEAM;
 
-    /// @notice The addresses of the bidding token.
+    /// @notice The addresses of the bidding tokens.
     address[2] public biddingTokens;
 
     /// @notice The duration of a single auction.
@@ -77,8 +77,12 @@ contract AuctionHouse is OwnableUpgradeable {
     /* ========== INITIALIZE ========== */
 
     /**
-     * @notice Initialize the auction house and base contracts and populate configuration values.
+     * @notice Initializes external dependencies and state variables.
      * @dev This function can only be called once.
+     * @param tomi_ The address of the `Tomi` token.
+     * @param funds_ The address of the `Funds` wallet.
+     * @param dao_ The address of the `DAO`.
+     * @param team_ The address of the `Team` wallet.
      */
     function initialize(address tomi_, address funds_, address dao_, address team_) external initializer {
         require(_msgSender() == _initializer, "Control: caller is not the initializer");
