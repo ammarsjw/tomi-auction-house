@@ -122,9 +122,90 @@ contract AuctionHouse is OwnableUpgradeable {
 
     /* ========== FUNCTIONS ========== */
 
-    // TODO?
-    // function getUserWins(address bidder) external view returns (Bid[] memory) {
-    // }
+    function getHighestBid(uint256 auctionIndex) external view returns (uint256) {
+        uint256 highestBidPrice = 0;
+        uint256 highestBidIndex;
+
+        for (uint256 i = 0 ; i < getAuctions[auctionIndex].bidCount ; i++) {
+            Bid memory bid = getBids[auctionIndex][i];
+
+            if (bid.price > highestBidPrice) {
+                highestBidIndex = bid.bidIndex;
+            }
+        }
+        return getBids[auctionIndex][highestBidIndex].price;
+    }
+
+    function getUserBids(address bidder) external view returns (uint256[] memory auctionIndexes, Bid[] memory userBids) {
+        uint256 userBidsLength;
+
+        for (uint256 i = 0 ; i < auctionCount ; i++) {
+            Auction memory auction = getAuctions[i];
+
+            for (uint256 j = 0 ; j < auction.bidCount ; j++) {
+                Bid memory bid = getBids[i][j];
+
+                if (bid.bidder == bidder) {
+                    userBidsLength++;
+                }
+            }
+        }
+        auctionIndexes = new uint256[](userBidsLength);
+        userBids = new Bid[](userBidsLength);
+        userBidsLength = 0;
+
+        for (uint256 i = 0 ; i < auctionCount ; i++) {
+            Auction memory auction = getAuctions[i];
+
+            for (uint256 j = 0 ; j < auction.bidCount ; j++) {
+                Bid memory bid = getBids[i][j];
+
+                if (bid.bidder == bidder) {
+                    auctionIndexes[userBidsLength] = auction.auctionIndex;
+                    userBids[userBidsLength] = bid;
+                    userBidsLength++;
+                }
+            }
+        }
+    }
+
+    function getBidStatuses(
+        uint256[] memory auctionIndexes,
+        uint256[] memory bidIndexes,
+        bytes32[][] memory merkleProofs
+    ) external view returns (uint8[] memory) {
+        require(auctionIndexes.length == bidIndexes.length, "AuctionHouse::getBidsStatus: argument arity mismatch");
+        uint256 currentAuctionIndex = auctionCount - 1;
+        // 0 - does not exist
+        // 1 - in progress
+        // 2 - claimed
+        // 3 - win
+        // 4 - loss
+        uint8[] memory statuses = new uint8[](auctionIndexes.length);
+
+        for (uint256 i = 0 ; i < auctionIndexes.length ; i++) {
+            Bid memory bid = getBids[auctionIndexes[i]][bidIndexes[i]];
+
+            if (bid.status) {
+                bytes32 node = keccak256(abi.encodePacked(auctionIndexes[i], _msgSender(), bidIndexes[i]));
+
+                if (auctionIndexes[i] == currentAuctionIndex) {
+                    statuses[i] = 1;
+                } else if (MerkleProof.verify(merkleProofs[i], getWins[auctionIndexes[i]], node)) {
+                    if (bid.isClaimed) {
+                        statuses[i] = 2;
+                    }
+                    else {
+                        statuses[i] = 3;
+                    }
+                }
+                else {
+                    statuses[i] = 4;
+                }
+            }
+        }
+        return statuses;
+    }
 
     function setFundsWallet(address funds_) external onlyOwner {
         FUNDS = funds_;
@@ -179,6 +260,7 @@ contract AuctionHouse is OwnableUpgradeable {
         auction.duration = duration;
         auction.bidLimit = bidLimit;
         // auction.bidCount = 0;
+
         getAuctions[auctionCount] = auction;
         auctionCount++;
 
@@ -208,6 +290,7 @@ contract AuctionHouse is OwnableUpgradeable {
         bid.status = true;
         // bid.isClaimed = false;
         bid.tokenType = tokenType;
+
         getBids[auctionIndex][bid.bidIndex] = bid;
         auction.bidCount++;
 
@@ -234,6 +317,7 @@ contract AuctionHouse is OwnableUpgradeable {
         bid.isClaimed = true;
         IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[bid.tokenType]);
         uint256 amount = (bid.price * bid.amountTomi) / 10 ** (18 + (18 - token.decimals()));
+
         SafeERC20Upgradeable.safeTransferFrom(token, _msgSender(), FUNDS, amount);
         TOMI.mint(_msgSender(), bid.amountTomi);
 
