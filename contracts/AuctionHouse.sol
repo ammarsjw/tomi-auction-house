@@ -194,12 +194,10 @@ contract AuctionHouse is OwnableUpgradeable {
                 } else if (MerkleProof.verify(merkleProofs[i], getWins[auctionIndexes[i]], node)) {
                     if (bid.isClaimed) {
                         statuses[i] = 2;
-                    }
-                    else {
+                    } else {
                         statuses[i] = 3;
                     }
-                }
-                else {
+                } else {
                     statuses[i] = 4;
                 }
             }
