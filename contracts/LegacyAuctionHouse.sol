@@ -270,6 +270,7 @@ contract AuctionHouse is OwnableUpgradeable {
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
         require(price > 0, "AuctionHouse::createBid: invalid price");
         require(0 < amountTomi && amountTomi < auction.bidLimit, "AuctionHouse::createBid: invalid amount tomi");
+        require(amount > 0, "AuctionHouse::createBid: invalid amount");
         require(
             token.allowance(_msgSender(), address(this)) >= amount &&
             token.balanceOf(_msgSender()) >= amount,
