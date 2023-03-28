@@ -197,6 +197,8 @@ contract AuctionHouse is AccessControlUpgradeable {
     function getBidStatuses(
         uint256[] memory auctionIndexes,
         uint256[] memory bidIndexes,
+        address[] memory referrers,
+        uint256[] memory referralCodes,
         bytes32[][] memory merkleProofs
     ) external view returns (uint8[] memory) {
         require(auctionIndexes.length == bidIndexes.length, "AuctionHouse::getBidsStatus: argument arity mismatch");
@@ -212,7 +214,7 @@ contract AuctionHouse is AccessControlUpgradeable {
             Bid memory bid = getBids[auctionIndexes[i]][bidIndexes[i]];
 
             if (bid.status) {
-                bytes32 node = keccak256(abi.encodePacked(auctionIndexes[i], _msgSender(), bidIndexes[i]));
+                bytes32 node = keccak256(abi.encodePacked(auctionIndexes[i], _msgSender(), bidIndexes[i], referrers[i], referralCodes[i]));
 
                 if (auctionIndexes[i] == currentAuctionIndex) {
                     statuses[i] = 1;
