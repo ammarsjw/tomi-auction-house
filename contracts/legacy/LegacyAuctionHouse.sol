@@ -2,12 +2,12 @@
 
 pragma solidity 0.8.19;
 
-import "./interfaces/ITomi.sol";
+import "../interfaces/ITomi.sol";
 
-import "./libraries/MerkleProof.sol";
-import "./libraries/SafeERC20Upgradeable.sol";
+import "../libraries/MerkleProof.sol";
+import "../libraries/SafeERC20Upgradeable.sol";
 
-import "./utils/OwnableUpgradeable.sol";
+import "../utils/OwnableUpgradeable.sol";
 
 contract AuctionHouse is OwnableUpgradeable {
 
