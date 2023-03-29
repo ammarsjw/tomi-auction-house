@@ -169,39 +169,16 @@ contract AuctionHouse is OwnableUpgradeable {
         }
     }
 
-    function getBidStatus(uint256 auctionIndex, uint256 bidIndex, bytes32[] memory merkleProof) external view returns (uint8) {
-        uint256 currentAuctionIndex = auctionCount - 1;
-        // 0 - does not exist
-        // 1 - in progress
-        // 2 - win
-        // 3 - loss
-        uint8 status;
-
-        for (uint256 i = 0 ; i < auctionIndex ; i++) {
-            Bid memory bid = getBids[auctionIndex][bidIndex];
-
-            if (bid.status) {
-                bytes32 node = keccak256(abi.encodePacked(auctionIndex, bid.bidder, bidIndex));
-
-                if (auctionIndex == currentAuctionIndex) {
-                    status = 1;
-                } else if (MerkleProof.verify(merkleProof, getWins[auctionIndex], node)) {
-                    status = 2;
-                } else {
-                    status = 3;
-                }
-            }
-        }
-        return status;
-    }
-
     function getBidStatuses(
         uint256[] memory auctionIndexes,
         uint256[] memory bidIndexes,
         bytes32[][] memory merkleProofs
     ) external view returns (uint8[] memory) {
-        require(auctionIndexes.length == bidIndexes.length, "AuctionHouse::getBidsStatus: argument arity mismatch");
-        uint256 currentAuctionIndex = auctionCount - 1;
+        require(
+            auctionIndexes.length == bidIndexes.length &&
+            auctionIndexes.length == merkleProofs.length,
+            "AuctionHouse::getBidsStatus: argument arity mismatch"
+        );
         // 0 - does not exist
         // 1 - in progress
         // 2 - win
@@ -209,21 +186,32 @@ contract AuctionHouse is OwnableUpgradeable {
         uint8[] memory statuses = new uint8[](auctionIndexes.length);
 
         for (uint256 i = 0 ; i < auctionIndexes.length ; i++) {
-            Bid memory bid = getBids[auctionIndexes[i]][bidIndexes[i]];
-
-            if (bid.status) {
-                bytes32 node = keccak256(abi.encodePacked(auctionIndexes[i], bid.bidder, bidIndexes[i]));
-
-                if (auctionIndexes[i] == currentAuctionIndex) {
-                    statuses[i] = 1;
-                } else if (MerkleProof.verify(merkleProofs[i], getWins[auctionIndexes[i]], node)) {
-                    statuses[i] = 2;
-                } else {
-                    statuses[i] = 3;
-                }
-            }
+            getBidStatus(auctionIndexes[i], bidIndexes[i], merkleProofs[i]);
         }
         return statuses;
+    }
+
+    function getBidStatus(uint256 auctionIndex, uint256 bidIndex, bytes32[] memory merkleProof) public view returns (uint8) {
+        uint256 currentAuctionIndex = auctionCount - 1;
+        // 0 - does not exist
+        // 1 - in progress
+        // 2 - win
+        // 3 - loss
+        uint8 status;
+        Bid memory bid = getBids[auctionIndex][bidIndex];
+
+        if (bid.status) {
+            bytes32 node = keccak256(abi.encodePacked(auctionIndex, bid.bidder, bidIndex));
+
+            if (auctionIndex == currentAuctionIndex) {
+                status = 1;
+            } else if (MerkleProof.verify(merkleProof, getWins[auctionIndex], node)) {
+                status = 2;
+            } else {
+                status = 3;
+            }
+        }
+        return status;
     }
 
     function setFundsWallet(address funds_) external onlyOwner {
