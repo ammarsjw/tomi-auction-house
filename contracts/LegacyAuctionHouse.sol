@@ -169,6 +169,32 @@ contract AuctionHouse is OwnableUpgradeable {
         }
     }
 
+    function getBidStatus(uint256 auctionIndex, uint256 bidIndex, bytes32[] memory merkleProof) external view returns (uint8) {
+        uint256 currentAuctionIndex = auctionCount - 1;
+        // 0 - does not exist
+        // 1 - in progress
+        // 2 - win
+        // 3 - loss
+        uint8 status;
+
+        for (uint256 i = 0 ; i < auctionIndex ; i++) {
+            Bid memory bid = getBids[auctionIndex][bidIndex];
+
+            if (bid.status) {
+                bytes32 node = keccak256(abi.encodePacked(auctionIndex, bid.bidder, bidIndex));
+
+                if (auctionIndex == currentAuctionIndex) {
+                    status = 1;
+                } else if (MerkleProof.verify(merkleProof, getWins[auctionIndex], node)) {
+                    status = 2;
+                } else {
+                    status = 3;
+                }
+            }
+        }
+        return status;
+    }
+
     function getBidStatuses(
         uint256[] memory auctionIndexes,
         uint256[] memory bidIndexes,
