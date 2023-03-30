@@ -286,7 +286,7 @@ contract AuctionHouse is AccessControlUpgradeable {
         uint256 auctionIndex = auctionCount - 1;
         Auction storage auction = getAuctions[auctionIndex];
         IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[tokenType]);
-        uint256 amount = (price * amountTomi) / 10 ** (18 + (18 - token.decimals()));
+        uint256 amount = (price * amountTomi) / 10 ** (36 - token.decimals());
 
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
         require(price > minBidPrice, "AuctionHouse::createBid: invalid price");
@@ -331,8 +331,13 @@ contract AuctionHouse is AccessControlUpgradeable {
         require(!bid.isClaimed, "AuctionHouse::claim: already claimed");
         bid.isClaimed = true;
         IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[bid.tokenType]);
-        uint256 amount = (bid.price * bid.amountTomi) / 10 ** (18 + (18 - token.decimals()));
+        uint256 amount = (bid.price * bid.amountTomi) / 10 ** (36 - token.decimals());
 
+        if (referrer != address(0)) {
+            uint256 amountReferrer = (amount * 10) / 100;
+            SafeERC20Upgradeable.safeTransferFrom(token, _msgSender(), referrer, amountReferrer);
+            amount = (amount * 85) / 100;
+        }
         SafeERC20Upgradeable.safeTransferFrom(token, _msgSender(), FUNDS, amount);
         TOMI.mint(_msgSender(), bid.amountTomi);
 
