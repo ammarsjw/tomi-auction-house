@@ -155,6 +155,7 @@ contract AuctionHouse is AccessControlUpgradeable {
             Bid memory bid = getBids[auctionIndex][i];
 
             if (bid.price > highestBidPrice) {
+                highestBidPrice = bid.price;
                 highestBidIndex = bid.bidIndex;
             }
         }
