@@ -60,9 +60,9 @@
             "label": "TOMI",
             "offset": 0,
             "slot": "101",
-            "type": "t_contract(ITomi)1482",
+            "type": "t_contract(ITomi)1298",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:17"
+            "src": "contracts\\AuctionHouse.sol:17"
           },
           {
             "label": "FUNDS",
@@ -70,7 +70,7 @@
             "slot": "102",
             "type": "t_address",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:19"
+            "src": "contracts\\AuctionHouse.sol:19"
           },
           {
             "label": "DAO",
@@ -78,7 +78,7 @@
             "slot": "103",
             "type": "t_address",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:21"
+            "src": "contracts\\AuctionHouse.sol:21"
           },
           {
             "label": "TEAM",
@@ -86,7 +86,7 @@
             "slot": "104",
             "type": "t_address",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:23"
+            "src": "contracts\\AuctionHouse.sol:23"
           },
           {
             "label": "biddingTokens",
@@ -94,7 +94,7 @@
             "slot": "105",
             "type": "t_array(t_address)2_storage",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:26"
+            "src": "contracts\\AuctionHouse.sol:26"
           },
           {
             "label": "duration",
@@ -102,7 +102,7 @@
             "slot": "107",
             "type": "t_uint256",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:29"
+            "src": "contracts\\AuctionHouse.sol:29"
           },
           {
             "label": "bidLimit",
@@ -110,7 +110,7 @@
             "slot": "108",
             "type": "t_uint256",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:31"
+            "src": "contracts\\AuctionHouse.sol:31"
           },
           {
             "label": "auctionCount",
@@ -118,7 +118,7 @@
             "slot": "109",
             "type": "t_uint256",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:34"
+            "src": "contracts\\AuctionHouse.sol:34"
           },
           {
             "label": "_isInitialized",
@@ -126,23 +126,23 @@
             "slot": "110",
             "type": "t_bool",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:38"
+            "src": "contracts\\AuctionHouse.sol:38"
           },
           {
             "label": "getAuctions",
             "offset": 0,
             "slot": "111",
-            "type": "t_mapping(t_uint256,t_struct(Auction)1551_storage)",
+            "type": "t_mapping(t_uint256,t_struct(Auction)68_storage)",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:61"
+            "src": "contracts\\AuctionHouse.sol:61"
           },
           {
             "label": "getBids",
             "offset": 0,
             "slot": "112",
-            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)1538_storage))",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)55_storage))",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:62"
+            "src": "contracts\\AuctionHouse.sol:62"
           },
           {
             "label": "getWins",
@@ -150,7 +150,7 @@
             "slot": "113",
             "type": "t_mapping(t_uint256,t_bytes32)",
             "contract": "AuctionHouse",
-            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:63"
+            "src": "contracts\\AuctionHouse.sol:63"
           }
         ],
         "types": {
@@ -178,7 +178,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(ITomi)1482": {
+          "t_contract(ITomi)1298": {
             "label": "contract ITomi",
             "numberOfBytes": "20"
           },
@@ -186,19 +186,19 @@
             "label": "mapping(uint256 => bytes32)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)1538_storage))": {
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)55_storage))": {
             "label": "mapping(uint256 => mapping(uint256 => struct AuctionHouse.Bid))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_struct(Auction)1551_storage)": {
+          "t_mapping(t_uint256,t_struct(Auction)68_storage)": {
             "label": "mapping(uint256 => struct AuctionHouse.Auction)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_struct(Bid)1538_storage)": {
+          "t_mapping(t_uint256,t_struct(Bid)55_storage)": {
             "label": "mapping(uint256 => struct AuctionHouse.Bid)",
             "numberOfBytes": "32"
           },
-          "t_struct(Auction)1551_storage": {
+          "t_struct(Auction)68_storage": {
             "label": "struct AuctionHouse.Auction",
             "members": [
               {
@@ -240,7 +240,297 @@
             ],
             "numberOfBytes": "192"
           },
-          "t_struct(Bid)1538_storage": {
+          "t_struct(Bid)55_storage": {
+            "label": "struct AuctionHouse.Bid",
+            "members": [
+              {
+                "label": "bidIndex",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "bidder",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "amountTomi",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "status",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "isClaimed",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "4"
+              },
+              {
+                "label": "tokenType",
+                "type": "t_uint8",
+                "offset": 2,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "b4872ae0df8f76817bd31904bd1c2ff8967a2090118a7b1c83a5885fb3351724": {
+      "address": "0xB1D6cce36D5b773Cd64b0e550De7dc312c05Fa14",
+      "txHash": "0x0f0deef6824315156a2bc2f9e9853079a99f232b320ea1a7e89db7d5a91411ba",
+      "layout": {
+        "solcVersion": "0.8.19",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "contracts\\utils\\Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "contracts\\utils\\Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "contracts\\utils\\ContextUpgradeable.sol:37"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "contracts\\utils\\OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "contracts\\utils\\OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "TOMI",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_contract(ITomi)1303",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:17"
+          },
+          {
+            "label": "FUNDS",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_address",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:19"
+          },
+          {
+            "label": "DAO",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:21"
+          },
+          {
+            "label": "TEAM",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_address",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:23"
+          },
+          {
+            "label": "biddingTokens",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_array(t_address)2_storage",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:26"
+          },
+          {
+            "label": "duration",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_uint256",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:29"
+          },
+          {
+            "label": "bidLimit",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_uint256",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:31"
+          },
+          {
+            "label": "auctionCount",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_uint256",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:34"
+          },
+          {
+            "label": "_isInitialized",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_bool",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:38"
+          },
+          {
+            "label": "getAuctions",
+            "offset": 0,
+            "slot": "111",
+            "type": "t_mapping(t_uint256,t_struct(Auction)68_storage)",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:61"
+          },
+          {
+            "label": "getBids",
+            "offset": 0,
+            "slot": "112",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)55_storage))",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:62"
+          },
+          {
+            "label": "getWins",
+            "offset": 0,
+            "slot": "113",
+            "type": "t_mapping(t_uint256,t_bytes32)",
+            "contract": "AuctionHouse",
+            "src": "contracts\\AuctionHouse.sol:63"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)2_storage": {
+            "label": "address[2]",
+            "numberOfBytes": "64"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(ITomi)1303": {
+            "label": "contract ITomi",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_uint256,t_bytes32)": {
+            "label": "mapping(uint256 => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)55_storage))": {
+            "label": "mapping(uint256 => mapping(uint256 => struct AuctionHouse.Bid))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Auction)68_storage)": {
+            "label": "mapping(uint256 => struct AuctionHouse.Auction)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Bid)55_storage)": {
+            "label": "mapping(uint256 => struct AuctionHouse.Bid)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Auction)68_storage": {
+            "label": "struct AuctionHouse.Auction",
+            "members": [
+              {
+                "label": "auctionIndex",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "startTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "endTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "duration",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "bidLimit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "bidCount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(Bid)55_storage": {
             "label": "struct AuctionHouse.Bid",
             "members": [
               {

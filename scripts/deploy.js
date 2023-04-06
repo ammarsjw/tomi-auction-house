@@ -3,14 +3,6 @@ const { ethers } = require("hardhat")
 const { network, run } = require("hardhat")
 const { Contract } = require("hardhat/internal/hardhat-network/stack-traces/model")
 
-async function verify(address, constructorArguments) {
-  console.log(`verify  ${address} with arguments ${constructorArguments.join(',')}`)
-  await run("verify:verify", {
-    address,
-    constructorArguments
-  })
-}
-
 async function main() {
   const AuctionHouse = await ethers.getContractFactory("AuctionHouse")
   console.log("Deploying AuctionHouse...")
@@ -27,3 +19,10 @@ async function main() {
 
 main()
 
+async function verify(address, constructorArguments) {
+  console.log(`verify  ${address} with arguments ${constructorArguments.join(',')}`)
+  await run("verify:verify", {
+    address,
+    constructorArguments
+  })
+}
