@@ -1,0 +1,303 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x54716C5F5fE6B9909E78DD9B5b78C61233dD8a11"
+  },
+  "proxies": [
+    {
+      "address": "0x55B2b0a3e814C870eC60648E7a02860c2326Dd2A",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "763ef4e4afc2c9a2442d9f3fdc1f65f5050caec3b5fece882b720657709c3c66": {
+      "address": "0x510f451Bc9c4fD8458453383adB575F57aDfDDdc",
+      "layout": {
+        "solcVersion": "0.8.19",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "contracts\\utils\\Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "contracts\\utils\\Initializable.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "contracts\\utils\\ContextUpgradeable.sol:37"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "contracts\\utils\\OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "contracts\\utils\\OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "TOMI",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_contract(ITomi)1482",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:17"
+          },
+          {
+            "label": "FUNDS",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_address",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:19"
+          },
+          {
+            "label": "DAO",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:21"
+          },
+          {
+            "label": "TEAM",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_address",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:23"
+          },
+          {
+            "label": "biddingTokens",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_array(t_address)2_storage",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:26"
+          },
+          {
+            "label": "duration",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_uint256",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:29"
+          },
+          {
+            "label": "bidLimit",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_uint256",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:31"
+          },
+          {
+            "label": "auctionCount",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_uint256",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:34"
+          },
+          {
+            "label": "_isInitialized",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_bool",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:38"
+          },
+          {
+            "label": "getAuctions",
+            "offset": 0,
+            "slot": "111",
+            "type": "t_mapping(t_uint256,t_struct(Auction)1551_storage)",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:61"
+          },
+          {
+            "label": "getBids",
+            "offset": 0,
+            "slot": "112",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)1538_storage))",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:62"
+          },
+          {
+            "label": "getWins",
+            "offset": 0,
+            "slot": "113",
+            "type": "t_mapping(t_uint256,t_bytes32)",
+            "contract": "AuctionHouse",
+            "src": "contracts\\legacy\\LegacyAuctionHouse.sol:63"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)2_storage": {
+            "label": "address[2]",
+            "numberOfBytes": "64"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(ITomi)1482": {
+            "label": "contract ITomi",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_uint256,t_bytes32)": {
+            "label": "mapping(uint256 => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)1538_storage))": {
+            "label": "mapping(uint256 => mapping(uint256 => struct AuctionHouse.Bid))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Auction)1551_storage)": {
+            "label": "mapping(uint256 => struct AuctionHouse.Auction)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Bid)1538_storage)": {
+            "label": "mapping(uint256 => struct AuctionHouse.Bid)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Auction)1551_storage": {
+            "label": "struct AuctionHouse.Auction",
+            "members": [
+              {
+                "label": "auctionIndex",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "startTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "endTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "duration",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "bidLimit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "bidCount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(Bid)1538_storage": {
+            "label": "struct AuctionHouse.Bid",
+            "members": [
+              {
+                "label": "bidIndex",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "bidder",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "amountTomi",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "status",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "isClaimed",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "4"
+              },
+              {
+                "label": "tokenType",
+                "type": "t_uint8",
+                "offset": 2,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}
