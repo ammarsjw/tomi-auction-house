@@ -7,27 +7,26 @@ import "../../contracts/interfaces/ITomi.sol";
 import "../../contracts/libraries/MerkleProof.sol";
 import "../../contracts/libraries/SafeERC20Upgradeable.sol";
 
-import "../../contracts/utils/AccessControlUpgradeable.sol";
+import "../../contracts/utils/OwnableUpgradeable.sol";
 
-contract AuctionHouse is AccessControlUpgradeable {
+contract AuctionHouse is OwnableUpgradeable {
 
     /* ========== STATE VARIABLES ========== */
-
-    bytes32 public constant GOVERNOR_ROLE = keccak256(abi.encodePacked("Governor"));
-    bytes32 public constant CALLER_ROLE = keccak256(abi.encodePacked("Caller"));
 
     /// @notice The address of the main token.
     ITomi public TOMI;
     /// @notice The address of the funds collection wallet.
     address public FUNDS;
+    /// @notice The address of the governance contract.
+    address public DAO;
+    /// @notice The address of the team wallet.
+    address public TEAM;
 
     /// @notice The addresses of the bidding tokens.
     address[2] public biddingTokens;
 
     /// @notice The duration of a single auction.
     uint256 public duration;
-    /// @notice The minimum price at which a user can bid at.
-    uint256 public minBidPrice;
     /// @notice The amount at which bids get capped.
     uint256 public bidLimit;
 
@@ -40,15 +39,6 @@ contract AuctionHouse is AccessControlUpgradeable {
 
     /* ========== STORAGE ========== */
 
-    struct Auction {
-        uint256 auctionIndex;
-        uint256 startTime;
-        uint256 endTime;
-        uint256 duration;
-        uint256 bidLimit;
-        uint256 bidCount;
-    }
-
     struct Bid {
         uint256 bidIndex;
         address bidder;
@@ -57,6 +47,15 @@ contract AuctionHouse is AccessControlUpgradeable {
         bool status;
         bool isClaimed;
         uint8 tokenType;
+    }
+
+    struct Auction {
+        uint256 auctionIndex;
+        uint256 startTime;
+        uint256 endTime;
+        uint256 duration;
+        uint256 bidLimit;
+        uint256 bidCount;
     }
 
     mapping (uint256 => Auction) public getAuctions;
@@ -70,10 +69,10 @@ contract AuctionHouse is AccessControlUpgradeable {
     event AuctionCancelBid(uint256 indexed auctionIndex, uint256 bidIndex, address bidder);
     event AuctionClaim(uint256 indexed auctionIndex, uint256 bidIndex, address bidder);
     event AuctionSettled(uint256 indexed auctionIndex);
-    event AuctionFundsWalletUpdated(address newFunds, address oldFunds);
-    event AuctionDurationUpdated(uint256 newDuration, uint256 oldDuration);
-    event AuctionMinBidPriceUpdated(uint256 newMinBidPrice, uint256 oldMinBidPrice);
-    event AuctionBidLimitUpdated(uint256 newBidLimit, uint256 oldBidLimit);
+    event AuctionDurationUpdated(uint256 duration);
+    event AuctionBidLimitUpdated(uint256 bidLimit);
+    event AuctionFundsWalletUpdated(address funds);
+    event AuctionTeamWalletUpdated(address team);
 
     /* ========== INITIALIZE ========== */
 
@@ -82,22 +81,19 @@ contract AuctionHouse is AccessControlUpgradeable {
      * @dev This function can only be called once.
      * @param tomi_ The address of the `Tomi` token.
      * @param funds_ The address of the `Funds` wallet.
-     * @param admin_ The address of the `Admin` wallet.
-     * @param caller_ The address of the dedicated `Caller`.
+     * @param dao_ The address of the `DAO`.
+     * @param team_ The address of the `Team` wallet.
      */
-    function initialize(address tomi_, address funds_, address admin_, address caller_) external initializer {
+    function initialize(address tomi_, address funds_, address dao_, address team_) external initializer {
         require(_msgSender() == _initializer, "Control: caller is not the initializer");
         // TODO uncomment
         // require(!_isInitialized, "Control: already initialized");
-
-        _grantRole(GOVERNOR_ROLE, admin_);
-        _grantRole(CALLER_ROLE, admin_);
-        _grantRole(CALLER_ROLE, caller_);
-        /// @dev the default admin's only purpose is to manage all other access privileges
-        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        __Ownable_init();
 
         TOMI = ITomi(tomi_);
         FUNDS = funds_;
+        DAO = dao_;
+        TEAM = team_;
 
         // TODO change
         biddingTokens = [
@@ -107,8 +103,7 @@ contract AuctionHouse is AccessControlUpgradeable {
 
         // TODO change
         duration = 5 minutes; // 1 days
-        minBidPrice = 0.5 * 1e18; // ???
-        bidLimit = 100000 * 1e18; // ???
+        bidLimit = 100000 * 1e18;
 
         _createAuction();
 
@@ -126,26 +121,6 @@ contract AuctionHouse is AccessControlUpgradeable {
     }
 
     /* ========== FUNCTIONS ========== */
-
-    function setFundsWallet(address newFunds) external onlyRole(GOVERNOR_ROLE) {
-        emit AuctionFundsWalletUpdated(newFunds, FUNDS);
-        FUNDS = newFunds;
-    }
-
-    function setDuration(uint256 newDuration) external onlyRole(GOVERNOR_ROLE) {
-        emit AuctionDurationUpdated(newDuration, duration);
-        duration = newDuration;
-    }
-
-    function setMinBidPrice(uint256 newMinBidPrice) external onlyRole(GOVERNOR_ROLE) {
-        emit AuctionMinBidPriceUpdated(newMinBidPrice, minBidPrice);
-        minBidPrice = newMinBidPrice;
-    }
-
-    function setBidLimit(uint256 newBidLimit) external onlyRole(GOVERNOR_ROLE) {
-        emit AuctionBidLimitUpdated(newBidLimit, bidLimit);
-        bidLimit = newBidLimit;
-    }
 
     function getHighestBid(uint256 auctionIndex) external view returns (uint256) {
         uint256 highestBidPrice = 0;
@@ -198,14 +173,10 @@ contract AuctionHouse is AccessControlUpgradeable {
     function getBidStatuses(
         uint256[] memory auctionIndexes,
         uint256[] memory bidIndexes,
-        address[] memory referrers,
-        uint256[] memory referralCodes,
         bytes32[][] memory merkleProofs
     ) external view returns (uint8[] memory) {
         require(
             auctionIndexes.length == bidIndexes.length &&
-            auctionIndexes.length == referrers.length &&
-            auctionIndexes.length == referralCodes.length &&
             auctionIndexes.length == merkleProofs.length,
             "AuctionHouse::getBidsStatus: argument arity mismatch"
         );
@@ -216,18 +187,12 @@ contract AuctionHouse is AccessControlUpgradeable {
         uint8[] memory statuses = new uint8[](auctionIndexes.length);
 
         for (uint256 i = 0 ; i < auctionIndexes.length ; i++) {
-            getBidStatus(auctionIndexes[i], bidIndexes[i], referrers[i], referralCodes[i], merkleProofs[i]);
+            getBidStatus(auctionIndexes[i], bidIndexes[i], merkleProofs[i]);
         }
         return statuses;
     }
 
-    function getBidStatus(
-        uint256 auctionIndex,
-        uint256 bidIndex,
-        address referrer,
-        uint256 referralCode,
-        bytes32[] memory merkleProof
-    ) public view returns (uint8) {
+    function getBidStatus(uint256 auctionIndex, uint256 bidIndex, bytes32[] memory merkleProof) public view returns (uint8) {
         uint256 currentAuctionIndex = auctionCount - 1;
         // 0 - does not exist
         // 1 - in progress
@@ -237,7 +202,7 @@ contract AuctionHouse is AccessControlUpgradeable {
         Bid memory bid = getBids[auctionIndex][bidIndex];
 
         if (bid.status) {
-            bytes32 node = keccak256(abi.encodePacked(auctionIndex, bid.bidder, bidIndex, referrer, referralCode));
+            bytes32 node = keccak256(abi.encodePacked(auctionIndex, bid.bidder, bidIndex));
 
             if (auctionIndex == currentAuctionIndex) {
                 status = 1;
@@ -250,7 +215,31 @@ contract AuctionHouse is AccessControlUpgradeable {
         return status;
     }
 
-    function settleAndCreateAuction(bytes32 root) external onlyRole(CALLER_ROLE) {
+    function setFundsWallet(address funds_) external onlyOwner {
+        FUNDS = funds_;
+
+        emit AuctionFundsWalletUpdated(funds_);
+    }
+
+    function setTeamWallet(address team_) external onlyOwner {
+        TEAM = team_;
+
+        emit AuctionTeamWalletUpdated(team_);
+    }
+
+    function setDuration(uint256 duration_) external onlyOwner {
+        duration = duration_;
+
+        emit AuctionDurationUpdated(duration_);
+    }
+
+    function setBidLimit(uint256 bidLimit_) external onlyOwner {
+        bidLimit = bidLimit_;
+
+        emit AuctionBidLimitUpdated(bidLimit_);
+    }
+
+    function settleAndCreateAuction(bytes32 root) external onlyOwner {
         uint256 auctionIndex = auctionCount - 1;
         Auction memory auction = getAuctions[auctionIndex];
 
@@ -263,6 +252,10 @@ contract AuctionHouse is AccessControlUpgradeable {
     function _settleAuction(bytes32 root) internal {
         uint256 auctionIndex = auctionCount - 1;
         getWins[auctionIndex] = root;
+        // minting to the DAO.
+        TOMI.mint(DAO, 100000 * 1e18);
+        // minting to the Team Wallet.
+        TOMI.mint(TEAM, 80000 * 1e18);
 
         emit AuctionSettled(auctionCount);
     }
@@ -287,10 +280,10 @@ contract AuctionHouse is AccessControlUpgradeable {
         uint256 auctionIndex = auctionCount - 1;
         Auction storage auction = getAuctions[auctionIndex];
         IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[tokenType]);
-        uint256 amount = (price * amountTomi) / 10 ** (36 - token.decimals());
+        uint256 amount = (price * amountTomi) / 10 ** (18 + (18 - token.decimals()));
 
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
-        require(price > minBidPrice, "AuctionHouse::createBid: invalid price");
+        require(price > 0, "AuctionHouse::createBid: invalid price");
         require(0 < amountTomi && amountTomi < auction.bidLimit, "AuctionHouse::createBid: invalid amount tomi");
         require(amount > 0, "AuctionHouse::createBid: invalid amount");
         require(
@@ -324,21 +317,16 @@ contract AuctionHouse is AccessControlUpgradeable {
         emit AuctionCancelBid(auctionIndex, bid.bidIndex, bid.bidder);
     }
 
-    function claim(uint256 auctionIndex, uint256 bidIndex, address referrer, uint256 referralCode, bytes32[] calldata merkleProof) external {
-        bytes32 node = keccak256(abi.encodePacked(auctionIndex, _msgSender(), bidIndex, referrer, referralCode));
+    function claim(uint256 auctionIndex, uint256 bidIndex, bytes32[] calldata merkleProof) external {
+        bytes32 node = keccak256(abi.encodePacked(auctionIndex, _msgSender(), bidIndex));
         Bid storage bid = getBids[auctionIndex][bidIndex];
 
         require(MerkleProof.verify(merkleProof, getWins[auctionIndex], node), "AuctionHouse::claim: invalid proof");
         require(!bid.isClaimed, "AuctionHouse::claim: already claimed");
         bid.isClaimed = true;
         IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[bid.tokenType]);
-        uint256 amount = (bid.price * bid.amountTomi) / 10 ** (36 - token.decimals());
+        uint256 amount = (bid.price * bid.amountTomi) / 10 ** (18 + (18 - token.decimals()));
 
-        if (referrer != address(0)) {
-            uint256 amountReferrer = (amount * 10) / 100;
-            SafeERC20Upgradeable.safeTransferFrom(token, _msgSender(), referrer, amountReferrer);
-            amount = (amount * 85) / 100;
-        }
         SafeERC20Upgradeable.safeTransferFrom(token, _msgSender(), FUNDS, amount);
         TOMI.mint(_msgSender(), bid.amountTomi);
 
