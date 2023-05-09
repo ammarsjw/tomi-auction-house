@@ -29,6 +29,8 @@ contract AuctionHouse is AccessControlUpgradeable {
 
     /// @notice The duration of a single auction.
     uint256 public duration;
+    /// @notice The amount of tokens in a single auction.
+    uint256 public tokenLimit;
     /// @notice The minimum price at which a user can bid at.
     uint256 public minBidPrice;
     /// @notice The amount at which bids get capped.
@@ -48,6 +50,8 @@ contract AuctionHouse is AccessControlUpgradeable {
         uint256 startTime;
         uint256 endTime;
         uint256 duration;
+        uint256 tokenLimit;
+        uint256 minBidPrice;
         uint256 bidLimit;
         uint256 bidCount;
     }
@@ -64,19 +68,29 @@ contract AuctionHouse is AccessControlUpgradeable {
 
     mapping (uint256 => Auction) public getAuctions;
     mapping (uint256 => mapping (uint256 => Bid)) public getBids;
+    mapping (uint256 => mapping (address => uint256)) public getBidLimits;
     mapping (uint256 => bytes32) public getWins;
 
     /* ========== EVENTS ========== */
 
-    event AuctionCreated(uint256 indexed auctionIndex, uint256 startTime, uint256 endTime);
+    event AuctionCreated(
+        uint256 indexed auctionIndex,
+        uint256 startTime,
+        uint256 endTime,
+        uint256 tokenLimit,
+        uint256 minBidPrice,
+        uint256 bidLimit
+    );
     event AuctionBid(uint256 indexed auctionIndex, uint256 bidIndex, address bidder, uint256 price, uint256 amountTomi, address token);
     event AuctionCancelBid(uint256 indexed auctionIndex, uint256 bidIndex, address bidder);
     event AuctionClaim(uint256 indexed auctionIndex, uint256 bidIndex, address bidder);
     event AuctionSettled(uint256 indexed auctionIndex);
     event AuctionFundsWalletUpdated(address newFunds, address oldFunds);
     event AuctionDurationUpdated(uint256 newDuration, uint256 oldDuration);
+    event AuctionTokenLimitUpdated(uint256 newTokenLimit, uint256 oldTokenLimit);
     event AuctionMinBidPriceUpdated(uint256 newMinBidPrice, uint256 oldMinBidPrice);
     event AuctionBidLimitUpdated(uint256 newBidLimit, uint256 oldBidLimit);
+    event AuctionCriteriaUpdated(uint256 newTokenLimit, uint256 newMinBidPrice, uint256 newBidLimit);
 
     /* ========== INITIALIZE ========== */
 
@@ -112,6 +126,7 @@ contract AuctionHouse is AccessControlUpgradeable {
 
         // TODO change
         duration = 5 minutes; // 1 days
+        tokenLimit = 100000 * 1e18; // ???
         minBidPrice = 0.5 * 1e18; // ???
         bidLimit = 100000 * 1e18; // ???
 
@@ -142,6 +157,11 @@ contract AuctionHouse is AccessControlUpgradeable {
         duration = newDuration;
     }
 
+    function setTokenLimit(uint256 newTokenLimit) external onlyRole(GOVERNOR_ROLE) {
+        emit AuctionTokenLimitUpdated(newTokenLimit, tokenLimit);
+        tokenLimit = newTokenLimit;
+    }
+
     function setMinBidPrice(uint256 newMinBidPrice) external onlyRole(GOVERNOR_ROLE) {
         emit AuctionMinBidPriceUpdated(newMinBidPrice, minBidPrice);
         minBidPrice = newMinBidPrice;
@@ -150,6 +170,14 @@ contract AuctionHouse is AccessControlUpgradeable {
     function setBidLimit(uint256 newBidLimit) external onlyRole(GOVERNOR_ROLE) {
         emit AuctionBidLimitUpdated(newBidLimit, bidLimit);
         bidLimit = newBidLimit;
+    }
+
+    function setAuctionCriteria(uint256 newTokenLimit, uint256 newMinBidPrice, uint256 newBidLimit) external onlyRole(GOVERNOR_ROLE) {
+        tokenLimit = newTokenLimit;
+        minBidPrice = newMinBidPrice;
+        bidLimit = newBidLimit;
+
+        emit AuctionCriteriaUpdated(newTokenLimit, newMinBidPrice, newBidLimit);
     }
 
     function getHighestBid(uint256 auctionIndex) external view returns (uint256) {
@@ -278,31 +306,41 @@ contract AuctionHouse is AccessControlUpgradeable {
         auction.startTime = block.timestamp;
         auction.endTime = block.timestamp + duration;
         auction.duration = duration;
+        auction.tokenLimit = tokenLimit;
+        auction.minBidPrice = minBidPrice;
         auction.bidLimit = bidLimit;
         // auction.bidCount = 0;
 
         getAuctions[auctionCount] = auction;
         auctionCount++;
 
-        emit AuctionCreated(auction.auctionIndex, auction.startTime, auction.endTime);
+        emit AuctionCreated(
+            auction.auctionIndex,
+            auction.startTime,
+            auction.endTime,
+            auction.tokenLimit,
+            auction.minBidPrice,
+            auction.bidLimit
+        );
     }
 
     function createBid(uint256 price, uint256 amountTomi, uint8 tokenType) external {
         require(tokenType < biddingTokens.length, "AuctionHouse::createBid: invalid token type");
+        require(price > minBidPrice, "AuctionHouse::createBid: invalid price");
         uint256 auctionIndex = auctionCount - 1;
         Auction storage auction = getAuctions[auctionIndex];
+        getBidLimits[auctionIndex][_msgSender()] += amountTomi;
         IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[tokenType]);
         uint256 amount = (price * amountTomi) / 10 ** (36 - token.decimals());
 
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
-        require(price > minBidPrice, "AuctionHouse::createBid: invalid price");
-        require(0 < amountTomi && amountTomi < auction.bidLimit, "AuctionHouse::createBid: invalid amount tomi");
-        require(amount > 0, "AuctionHouse::createBid: invalid amount");
+        require(getBidLimits[auctionIndex][_msgSender()] < auction.bidLimit, "AuctionHouse::createBid: bid limit exceeded");
         require(
             token.allowance(_msgSender(), address(this)) >= amount &&
             token.balanceOf(_msgSender()) >= amount,
             "AuctionHouse::createBid: insufficient allowance or balance"
         );
+        require(amount > 0, "AuctionHouse::createBid: invalid amount");
         Bid memory bid;
         bid.bidIndex = auction.bidCount;
         bid.bidder = _msgSender();
