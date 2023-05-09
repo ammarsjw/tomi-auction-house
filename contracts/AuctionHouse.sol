@@ -366,8 +366,9 @@ contract AuctionHouse is AccessControlUpgradeable {
         uint256 auctionIndex = auctionCount - 1;
         Bid memory bid = getBids[auctionIndex][bidIndex];
 
-        require(bid.status, "AuctionHouse::cancelBid: invalid bidIndex");
+        require(bid.status, "AuctionHouse::cancelBid: invalid bid index");
         require(_msgSender() == bid.bidder, "AuctionHouse::cancelBid: caller is not the bidder");
+        getBidLimits[auctionIndex][_msgSender()] -= bid.amountTomi;
         delete getBids[auctionIndex][bidIndex];
 
         emit AuctionCancelBid(auctionIndex, bid.bidIndex, bid.bidder);

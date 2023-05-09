@@ -1,14 +1,3 @@
-// import { json } from '@graphprotocol/graph-ts';
-// import fetch from 'node-fetch';
-// declare global {
-//   interface JSON  {
-//       stringify: (obj: any) => string,
-//       parse: any
-//   }
-// }
-// import { BigInt, Bytes } from "@graphprotocol/graph-ts";
-// import axios from "axios";
-
 import {
   AuctionBid as AuctionBidEvent,
   AuctionBidLimitUpdated as AuctionBidLimitUpdatedEvent,
@@ -22,6 +11,7 @@ import {
   Initialized as InitializedEvent,
   OwnershipTransferred as OwnershipTransferredEvent,
 } from "../generated/AuctionHouse/AuctionHouse";
+
 import {
   AuctionBid,
   AuctionBidLimitUpdated,
@@ -47,25 +37,16 @@ export function handleAuctionBid(event: AuctionBidEvent): void {
   entity.amountTomi = event.params.amountTomi;
   entity.isClaimed = false;
   entity.token = event.params.token;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
   entity.save();
 }
 
-export function handleAuctionBidLimitUpdated(
-  event: AuctionBidLimitUpdatedEvent
-): void {
+export function handleAuctionBidLimitUpdated(event: AuctionBidLimitUpdatedEvent): void {
   let entity = new AuctionBidLimitUpdated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
   entity.bidLimit = event.params.bidLimit;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
 
@@ -76,11 +57,7 @@ export function handleAuctionCancelBid(event: AuctionCancelBidEvent): void {
   entity.auctionIndex = event.params.auctionIndex;
   entity.bidIndex = event.params.bidIndex;
   entity.bidder = event.params.bidder;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
 
@@ -91,12 +68,9 @@ export function handleAuctionClaim(event: AuctionClaimEvent): void {
   entity.auctionIndex = event.params.auctionIndex;
   entity.bidIndex = event.params.bidIndex;
   entity.bidder = event.params.bidder;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
+
   let _id = event.params.auctionIndex.toString().concat("-").concat(event.params.bidder.toHexString()).concat("-").concat(event.params.bidIndex.toString())
 
   let auctioBID = AuctionBid.load (_id)
@@ -113,11 +87,7 @@ export function handleAuctionCreated(event: AuctionCreatedEvent): void {
   entity.auctionIndex = event.params.auctionIndex;
   entity.startTime = event.params.startTime;
   entity.endTime = event.params.endTime;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
 
@@ -128,11 +98,7 @@ export function handleAuctionDurationUpdated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
   entity.duration = event.params.duration;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
 
@@ -143,11 +109,7 @@ export function handleAuctionFundsWalletUpdated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
   entity.funds = event.params.funds;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
 
@@ -156,11 +118,7 @@ export function handleAuctionSettled(event: AuctionSettledEvent): void {
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
   entity.auctionIndex = event.params.auctionIndex;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
 
@@ -171,11 +129,7 @@ export function handleAuctionTeamWalletUpdated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
   entity.team = event.params.team;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
 
@@ -184,11 +138,7 @@ export function handleInitialized(event: InitializedEvent): void {
     event.transaction.hash.concatI32(event.logIndex.toI32())
   );
   entity.version = event.params.version;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
 
@@ -200,10 +150,6 @@ export function handleOwnershipTransferred(
   );
   entity.previousOwner = event.params.previousOwner;
   entity.newOwner = event.params.newOwner;
-
-  entity.blockNumber = event.block.number;
   entity.blockTimestamp = event.block.timestamp;
-  entity.transactionHash = event.transaction.hash;
-
   entity.save();
 }
