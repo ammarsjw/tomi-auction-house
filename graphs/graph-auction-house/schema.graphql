@@ -1,0 +1,103 @@
+
+
+type AuctionBid @entity(immutable: false) {
+  id: ID!
+  auctionIndex: BigInt! # uint256
+  bidIndex: BigInt! # uint256
+  bidder: Bytes! # address
+  price: BigInt! # uint256
+  amountTomi: BigInt! # uint256
+  isClaimed:  Boolean! # bool
+  token: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+ 
+
+type AuctionBidLimitUpdated @entity(immutable: true) {
+  id: Bytes!
+  bidLimit: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AuctionCancelBid @entity(immutable: true) {
+  id: Bytes!
+  auctionIndex: BigInt! # uint256
+  bidIndex: BigInt! # uint256
+  bidder: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AuctionClaim @entity(immutable: true) {
+  id: Bytes!
+  auctionIndex: BigInt! # uint256
+  bidIndex: BigInt! # uint256
+  bidder: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AuctionCreated @entity(immutable: true) {
+  id: Bytes!
+  auctionIndex: BigInt! # uint256
+  startTime: BigInt! # uint256
+  endTime: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AuctionDurationUpdated @entity(immutable: true) {
+  id: Bytes!
+  duration: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AuctionFundsWalletUpdated @entity(immutable: true) {
+  id: Bytes!
+  funds: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AuctionSettled @entity(immutable: true) {
+  id: Bytes!
+  auctionIndex: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AuctionTeamWalletUpdated @entity(immutable: true) {
+  id: Bytes!
+  team: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Initialized @entity(immutable: true) {
+  id: Bytes!
+  version: Int! # uint8
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OwnershipTransferred @entity(immutable: true) {
+  id: Bytes!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

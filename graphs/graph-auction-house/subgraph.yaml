@@ -1,0 +1,55 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: AuctionHouse
+    network: goerli
+    source:
+      address: "0x55B2b0a3e814C870eC60648E7a02860c2326Dd2A"
+      abi: AuctionHouse
+      startBlock: 8739319
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - AuctionBid
+        - AuctionBidLimitUpdated
+        - AuctionCancelBid
+        - AuctionClaim
+        - AuctionCreated
+        - AuctionDurationUpdated
+        - AuctionFundsWalletUpdated
+        - AuctionSettled
+        - AuctionTeamWalletUpdated
+        - Initialized
+        - OwnershipTransferred
+      abis:
+        - name: AuctionHouse
+          file: ./abis/AuctionHouse.json
+      eventHandlers:
+        - event: AuctionBid(indexed uint256,uint256,address,uint256,uint256,address)
+          handler: handleAuctionBid
+        - event: AuctionBidLimitUpdated(uint256)
+          handler: handleAuctionBidLimitUpdated
+        - event: AuctionCancelBid(indexed uint256,uint256,address)
+          handler: handleAuctionCancelBid
+        - event: AuctionClaim(indexed uint256,uint256,address)
+          handler: handleAuctionClaim
+        - event: AuctionCreated(indexed uint256,uint256,uint256)
+          handler: handleAuctionCreated
+        - event: AuctionDurationUpdated(uint256)
+          handler: handleAuctionDurationUpdated
+        - event: AuctionFundsWalletUpdated(address)
+          handler: handleAuctionFundsWalletUpdated
+        - event: AuctionSettled(indexed uint256)
+          handler: handleAuctionSettled
+        - event: AuctionTeamWalletUpdated(address)
+          handler: handleAuctionTeamWalletUpdated
+        - event: Initialized(uint8)
+          handler: handleInitialized
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+          
+      file: ./src/auction-house.ts
