@@ -326,13 +326,13 @@ contract AuctionHouse is AccessControlUpgradeable {
 
     function createBid(uint256 price, uint256 amountTomi, uint8 tokenType) external {
         require(tokenType < biddingTokens.length, "AuctionHouse::createBid: invalid token type");
-        require(price > minBidPrice, "AuctionHouse::createBid: invalid price");
         uint256 auctionIndex = auctionCount - 1;
         Auction storage auction = getAuctions[auctionIndex];
         getBidLimits[auctionIndex][_msgSender()] += amountTomi;
         IERC20Upgradeable token = IERC20Upgradeable(biddingTokens[tokenType]);
         uint256 amount = (price * amountTomi) / 10 ** (36 - token.decimals());
 
+        require(price > auction.minBidPrice, "AuctionHouse::createBid: invalid price");
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
         require(getBidLimits[auctionIndex][_msgSender()] < auction.bidLimit, "AuctionHouse::createBid: bid limit exceeded");
         require(
