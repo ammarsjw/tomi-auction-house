@@ -90,7 +90,14 @@ contract AuctionHouse is AccessControlUpgradeable {
     event AuctionTokenLimitUpdated(uint256 newTokenLimit, uint256 oldTokenLimit);
     event AuctionMinBidPriceUpdated(uint256 newMinBidPrice, uint256 oldMinBidPrice);
     event AuctionBidLimitUpdated(uint256 newBidLimit, uint256 oldBidLimit);
-    event AuctionCriteriaUpdated(uint256 newTokenLimit, uint256 newMinBidPrice, uint256 newBidLimit);
+    event AuctionCriteriaUpdated(
+        uint256 newTokenLimit,
+        uint256 oldTokenLimit,
+        uint256 newMinBidPrice,
+        uint256 oldMinBidPrice,
+        uint256 newBidLimit,
+        uint256 oldBidLimit
+    );
 
     /* ========== INITIALIZE ========== */
 
@@ -173,11 +180,10 @@ contract AuctionHouse is AccessControlUpgradeable {
     }
 
     function setAuctionCriteria(uint256 newTokenLimit, uint256 newMinBidPrice, uint256 newBidLimit) external onlyRole(GOVERNOR_ROLE) {
+        emit AuctionCriteriaUpdated(newTokenLimit, tokenLimit, newMinBidPrice, minBidPrice, newBidLimit, bidLimit);
         tokenLimit = newTokenLimit;
         minBidPrice = newMinBidPrice;
         bidLimit = newBidLimit;
-
-        emit AuctionCriteriaUpdated(newTokenLimit, newMinBidPrice, newBidLimit);
     }
 
     function getHighestBid(uint256 auctionIndex) external view returns (uint256) {
