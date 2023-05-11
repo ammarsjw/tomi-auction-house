@@ -6,7 +6,13 @@ const { Contract } = require("hardhat/internal/hardhat-network/stack-traces/mode
 async function main() {
   const AuctionHouse = await ethers.getContractFactory("AuctionHouse")
   console.log("Deploying AuctionHouse...")
-  const contract = await upgrades.deployProxy(AuctionHouse, ["0xC1e1336e0b25038a8fF92dE84EdE6E44a76fe9BF","0x34136d58CB3ED22EB4844B481DDD5336886b3cec"], {
+  const contract = await upgrades.deployProxy(AuctionHouse, [
+    "0xC1e1336e0b25038a8fF92dE84EdE6E44a76fe9BF", // `Tomi` token
+    "0x34136d58CB3ED22EB4844B481DDD5336886b3cec", // `Vault` holding Tomi tokens
+    "0x45faf7923BAb5A5380515E055CA700519B3e4705", // `Funds` collector
+    "0x45faf7923BAb5A5380515E055CA700519B3e4705", // `Admin` for changing certain Auction criteria
+    "0x294d0487fdf7acecf342ae70AFc5549A6E90f3e0", // dedicated `Caller` for settling and creating Auctions
+  ], {
     initializer: "initialize",
     kind: "transparent",
   })

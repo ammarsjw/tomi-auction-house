@@ -12,7 +12,8 @@ type AuctionBid @entity(immutable: false) {
 
 type AuctionBidLimitUpdated @entity(immutable: true) {
   id: Bytes!
-  bidLimit: BigInt! # uint256
+  newBidLimit: BigInt! # uint256
+  oldBidLimit: BigInt! # uint256
   blockTimestamp: BigInt!
 }
 
@@ -32,8 +33,8 @@ type AuctionClaim @entity(immutable: true) {
   blockTimestamp: BigInt!
 }
 
-type AuctionCreated @entity(immutable: true) {
-  id: Bytes!
+type AuctionCreated @entity(immutable: false) {
+  id: ID!
   auctionIndex: BigInt! # uint256
   startTime: BigInt! # uint256
   endTime: BigInt! # uint256
@@ -41,19 +42,20 @@ type AuctionCreated @entity(immutable: true) {
   minBidPrice: BigInt! # uint256
   bidLimit: BigInt! # uint256
   bidCount: BigInt!
-  highestBid: BigInt!
   blockTimestamp: BigInt!
 }
 
 type AuctionDurationUpdated @entity(immutable: true) {
   id: Bytes!
-  duration: BigInt! # uint256
+  newDuration: BigInt! # uint256
+  oldDuration: BigInt! # uint256
   blockTimestamp: BigInt!
 }
 
 type AuctionFundsWalletUpdated @entity(immutable: true) {
   id: Bytes!
-  funds: Bytes! # address
+  newFunds: Bytes! # address
+  oldFunds: Bytes! # address
   blockTimestamp: BigInt!
 }
 
@@ -63,21 +65,8 @@ type AuctionSettled @entity(immutable: true) {
   blockTimestamp: BigInt!
 }
 
-type AuctionTeamWalletUpdated @entity(immutable: true) {
-  id: Bytes!
-  team: Bytes! # address
-  blockTimestamp: BigInt!
-}
-
 type Initialized @entity(immutable: true) {
   id: Bytes!
   version: Int! # uint8
-  blockTimestamp: BigInt!
-}
-
-type OwnershipTransferred @entity(immutable: true) {
-  id: Bytes!
-  previousOwner: Bytes! # address
-  newOwner: Bytes! # address
   blockTimestamp: BigInt!
 }

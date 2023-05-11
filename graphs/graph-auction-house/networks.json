@@ -1,8 +1,7 @@
 {
   "goerli": {
     "AuctionHouse": {
-      "address": "0xC7336a5E63d89c08Bcf3eC2D85976F28a2F577dc",
-      "startBlock": 8686143
+      "address": "0x17BC084E63d61f11628ff2A3c654756f2c45d9C6"
     }
   }
 }

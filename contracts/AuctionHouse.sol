@@ -40,7 +40,7 @@ contract AuctionHouse is AccessControlUpgradeable {
     uint256 public auctionCount;
 
     /// @dev Initialization variables.
-    address private constant _initializer = 0x34136d58CB3ED22EB4844B481DDD5336886b3cec;
+    address private constant _initializer = 0x45faf7923BAb5A5380515E055CA700519B3e4705;
     bool private _isInitialized;
 
     /* ========== STORAGE ========== */

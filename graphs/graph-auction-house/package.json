@@ -8,7 +8,8 @@
     "create-local": "graph create --node http://localhost:8020/ saifdevblochain/auction",
     "remove-local": "graph remove --node http://localhost:8020/ saifdevblochain/auction",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 saifdevblochain/auction",
-    "test": "graph test"
+    "test": "graph test",
+    "deploy-hosted": "graph deploy --product hosted-service saifdevblochain/auction"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.38.0",

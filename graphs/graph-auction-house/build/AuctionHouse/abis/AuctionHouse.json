@@ -48,7 +48,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "bidLimit",
+        "name": "newBidLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldBidLimit",
         "type": "uint256"
       }
     ],
@@ -125,6 +131,24 @@
         "internalType": "uint256",
         "name": "endTime",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minBidPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "bidLimit",
+        "type": "uint256"
       }
     ],
     "name": "AuctionCreated",
@@ -136,7 +160,56 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "duration",
+        "name": "newTokenLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldTokenLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newMinBidPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldMinBidPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newBidLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldBidLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "AuctionCriteriaUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newDuration",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldDuration",
         "type": "uint256"
       }
     ],
@@ -149,11 +222,36 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "funds",
+        "name": "newFunds",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldFunds",
         "type": "address"
       }
     ],
     "name": "AuctionFundsWalletUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newMinBidPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldMinBidPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "AuctionMinBidPriceUpdated",
     "type": "event"
   },
   {
@@ -174,12 +272,18 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "team",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "newTokenLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldTokenLimit",
+        "type": "uint256"
       }
     ],
-    "name": "AuctionTeamWalletUpdated",
+    "name": "AuctionTokenLimitUpdated",
     "type": "event"
   },
   {
@@ -200,28 +304,97 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "previousAdminRole",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "newAdminRole",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RoleAdminChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
-        "name": "previousOwner",
+        "name": "account",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "newOwner",
+        "name": "sender",
         "type": "address"
       }
     ],
-    "name": "OwnershipTransferred",
+    "name": "RoleGranted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "RoleRevoked",
     "type": "event"
   },
   {
     "inputs": [],
-    "name": "DAO",
+    "name": "CALLER_ROLE",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "bytes32",
         "name": "",
-        "type": "address"
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DEFAULT_ADMIN_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -242,12 +415,12 @@
   },
   {
     "inputs": [],
-    "name": "TEAM",
+    "name": "GOVERNOR_ROLE",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "bytes32",
         "name": "",
-        "type": "address"
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -259,6 +432,19 @@
     "outputs": [
       {
         "internalType": "contract ITomi",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "VAULT",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }
@@ -335,6 +521,16 @@
         "internalType": "uint256",
         "name": "bidIndex",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "referralCode",
+        "type": "string"
       },
       {
         "internalType": "bytes32[]",
@@ -415,6 +611,16 @@
       },
       {
         "internalType": "uint256",
+        "name": "tokenLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minBidPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "bidLimit",
         "type": "uint256"
       },
@@ -422,6 +628,69 @@
         "internalType": "uint256",
         "name": "bidCount",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "getBidLimits",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "auctionIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "bidIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "referralCode",
+        "type": "string"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "merkleProof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getBidStatus",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -438,6 +707,16 @@
         "internalType": "uint256[]",
         "name": "bidIndexes",
         "type": "uint256[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "referrers",
+        "type": "address[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "referralCodes",
+        "type": "string[]"
       },
       {
         "internalType": "bytes32[][]",
@@ -532,6 +811,25 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRoleAdmin",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "bidder",
         "type": "address"
@@ -612,8 +910,55 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "grantRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "hasRole",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "tomi_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "vault_",
         "type": "address"
       },
       {
@@ -623,12 +968,12 @@
       },
       {
         "internalType": "address",
-        "name": "dao_",
+        "name": "admin_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "team_",
+        "name": "caller_",
         "type": "address"
       }
     ],
@@ -639,20 +984,49 @@
   },
   {
     "inputs": [],
-    "name": "owner",
+    "name": "minBidPrice",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "renounceOwnership",
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "renounceRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "revokeRole",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -661,7 +1035,30 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "bidLimit_",
+        "name": "newTokenLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newMinBidPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newBidLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAuctionCriteria",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newBidLimit",
         "type": "uint256"
       }
     ],
@@ -674,7 +1071,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "duration_",
+        "name": "newDuration",
         "type": "uint256"
       }
     ],
@@ -687,7 +1084,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "funds_",
+        "name": "newFunds",
         "type": "address"
       }
     ],
@@ -699,12 +1096,25 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "team_",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "newMinBidPrice",
+        "type": "uint256"
       }
     ],
-    "name": "setTeamWallet",
+    "name": "setMinBidPrice",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newTokenLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "setTokenLimit",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -720,6 +1130,25 @@
     "name": "settleAndCreateAuction",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "interfaceId",
+        "type": "bytes4"
+      }
+    ],
+    "name": "supportsInterface",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -749,16 +1178,16 @@
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "tokenLimit",
+    "outputs": [
       {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
-    "name": "transferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }
 ]

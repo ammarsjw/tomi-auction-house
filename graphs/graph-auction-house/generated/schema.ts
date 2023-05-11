@@ -105,15 +105,6 @@ export class AuctionBid extends Entity {
     this.set("token", Value.fromBytes(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    return value!.toBigInt();
-  }
-
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
-  }
-
   get blockTimestamp(): BigInt {
     let value = this.get("blockTimestamp");
     return value!.toBigInt();
@@ -121,15 +112,6 @@ export class AuctionBid extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
   }
 }
 
@@ -169,22 +151,22 @@ export class AuctionBidLimitUpdated extends Entity {
     this.set("id", Value.fromBytes(value));
   }
 
-  get bidLimit(): BigInt {
-    let value = this.get("bidLimit");
+  get newBidLimit(): BigInt {
+    let value = this.get("newBidLimit");
     return value!.toBigInt();
   }
 
-  set bidLimit(value: BigInt) {
-    this.set("bidLimit", Value.fromBigInt(value));
+  set newBidLimit(value: BigInt) {
+    this.set("newBidLimit", Value.fromBigInt(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
+  get oldBidLimit(): BigInt {
+    let value = this.get("oldBidLimit");
     return value!.toBigInt();
   }
 
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
+  set oldBidLimit(value: BigInt) {
+    this.set("oldBidLimit", Value.fromBigInt(value));
   }
 
   get blockTimestamp(): BigInt {
@@ -194,15 +176,6 @@ export class AuctionBidLimitUpdated extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
   }
 }
 
@@ -266,15 +239,6 @@ export class AuctionCancelBid extends Entity {
     this.set("bidder", Value.fromBytes(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    return value!.toBigInt();
-  }
-
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
-  }
-
   get blockTimestamp(): BigInt {
     let value = this.get("blockTimestamp");
     return value!.toBigInt();
@@ -282,15 +246,6 @@ export class AuctionCancelBid extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
   }
 }
 
@@ -354,15 +309,6 @@ export class AuctionClaim extends Entity {
     this.set("bidder", Value.fromBytes(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    return value!.toBigInt();
-  }
-
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
-  }
-
   get blockTimestamp(): BigInt {
     let value = this.get("blockTimestamp");
     return value!.toBigInt();
@@ -371,21 +317,12 @@ export class AuctionClaim extends Entity {
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
   }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
-  }
 }
 
 export class AuctionCreated extends Entity {
-  constructor(id: Bytes) {
+  constructor(id: string) {
     super();
-    this.set("id", Value.fromBytes(id));
+    this.set("id", Value.fromString(id));
   }
 
   save(): void {
@@ -393,26 +330,24 @@ export class AuctionCreated extends Entity {
     assert(id != null, "Cannot save AuctionCreated entity without an ID");
     if (id) {
       assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type AuctionCreated must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        id.kind == ValueKind.STRING,
+        `Entities of type AuctionCreated must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("AuctionCreated", id.toBytes().toHexString(), this);
+      store.set("AuctionCreated", id.toString(), this);
     }
   }
 
-  static load(id: Bytes): AuctionCreated | null {
-    return changetype<AuctionCreated | null>(
-      store.get("AuctionCreated", id.toHexString())
-    );
+  static load(id: string): AuctionCreated | null {
+    return changetype<AuctionCreated | null>(store.get("AuctionCreated", id));
   }
 
-  get id(): Bytes {
+  get id(): string {
     let value = this.get("id");
-    return value!.toBytes();
+    return value!.toString();
   }
 
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
   get auctionIndex(): BigInt {
@@ -442,13 +377,40 @@ export class AuctionCreated extends Entity {
     this.set("endTime", Value.fromBigInt(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
+  get tokenLimit(): BigInt {
+    let value = this.get("tokenLimit");
     return value!.toBigInt();
   }
 
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
+  set tokenLimit(value: BigInt) {
+    this.set("tokenLimit", Value.fromBigInt(value));
+  }
+
+  get minBidPrice(): BigInt {
+    let value = this.get("minBidPrice");
+    return value!.toBigInt();
+  }
+
+  set minBidPrice(value: BigInt) {
+    this.set("minBidPrice", Value.fromBigInt(value));
+  }
+
+  get bidLimit(): BigInt {
+    let value = this.get("bidLimit");
+    return value!.toBigInt();
+  }
+
+  set bidLimit(value: BigInt) {
+    this.set("bidLimit", Value.fromBigInt(value));
+  }
+
+  get bidCount(): BigInt {
+    let value = this.get("bidCount");
+    return value!.toBigInt();
+  }
+
+  set bidCount(value: BigInt) {
+    this.set("bidCount", Value.fromBigInt(value));
   }
 
   get blockTimestamp(): BigInt {
@@ -458,15 +420,6 @@ export class AuctionCreated extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
   }
 }
 
@@ -506,22 +459,22 @@ export class AuctionDurationUpdated extends Entity {
     this.set("id", Value.fromBytes(value));
   }
 
-  get duration(): BigInt {
-    let value = this.get("duration");
+  get newDuration(): BigInt {
+    let value = this.get("newDuration");
     return value!.toBigInt();
   }
 
-  set duration(value: BigInt) {
-    this.set("duration", Value.fromBigInt(value));
+  set newDuration(value: BigInt) {
+    this.set("newDuration", Value.fromBigInt(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
+  get oldDuration(): BigInt {
+    let value = this.get("oldDuration");
     return value!.toBigInt();
   }
 
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
+  set oldDuration(value: BigInt) {
+    this.set("oldDuration", Value.fromBigInt(value));
   }
 
   get blockTimestamp(): BigInt {
@@ -531,15 +484,6 @@ export class AuctionDurationUpdated extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
   }
 }
 
@@ -579,22 +523,22 @@ export class AuctionFundsWalletUpdated extends Entity {
     this.set("id", Value.fromBytes(value));
   }
 
-  get funds(): Bytes {
-    let value = this.get("funds");
+  get newFunds(): Bytes {
+    let value = this.get("newFunds");
     return value!.toBytes();
   }
 
-  set funds(value: Bytes) {
-    this.set("funds", Value.fromBytes(value));
+  set newFunds(value: Bytes) {
+    this.set("newFunds", Value.fromBytes(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    return value!.toBigInt();
+  get oldFunds(): Bytes {
+    let value = this.get("oldFunds");
+    return value!.toBytes();
   }
 
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
+  set oldFunds(value: Bytes) {
+    this.set("oldFunds", Value.fromBytes(value));
   }
 
   get blockTimestamp(): BigInt {
@@ -604,15 +548,6 @@ export class AuctionFundsWalletUpdated extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
   }
 }
 
@@ -658,15 +593,6 @@ export class AuctionSettled extends Entity {
     this.set("auctionIndex", Value.fromBigInt(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    return value!.toBigInt();
-  }
-
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
-  }
-
   get blockTimestamp(): BigInt {
     let value = this.get("blockTimestamp");
     return value!.toBigInt();
@@ -674,88 +600,6 @@ export class AuctionSettled extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
-  }
-}
-
-export class AuctionTeamWalletUpdated extends Entity {
-  constructor(id: Bytes) {
-    super();
-    this.set("id", Value.fromBytes(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(
-      id != null,
-      "Cannot save AuctionTeamWalletUpdated entity without an ID"
-    );
-    if (id) {
-      assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type AuctionTeamWalletUpdated must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
-      );
-      store.set("AuctionTeamWalletUpdated", id.toBytes().toHexString(), this);
-    }
-  }
-
-  static load(id: Bytes): AuctionTeamWalletUpdated | null {
-    return changetype<AuctionTeamWalletUpdated | null>(
-      store.get("AuctionTeamWalletUpdated", id.toHexString())
-    );
-  }
-
-  get id(): Bytes {
-    let value = this.get("id");
-    return value!.toBytes();
-  }
-
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get team(): Bytes {
-    let value = this.get("team");
-    return value!.toBytes();
-  }
-
-  set team(value: Bytes) {
-    this.set("team", Value.fromBytes(value));
-  }
-
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    return value!.toBigInt();
-  }
-
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
-  }
-
-  get blockTimestamp(): BigInt {
-    let value = this.get("blockTimestamp");
-    return value!.toBigInt();
-  }
-
-  set blockTimestamp(value: BigInt) {
-    this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
   }
 }
 
@@ -801,15 +645,6 @@ export class Initialized extends Entity {
     this.set("version", Value.fromI32(value));
   }
 
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    return value!.toBigInt();
-  }
-
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
-  }
-
   get blockTimestamp(): BigInt {
     let value = this.get("blockTimestamp");
     return value!.toBigInt();
@@ -817,93 +652,5 @@ export class Initialized extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
-  }
-}
-
-export class OwnershipTransferred extends Entity {
-  constructor(id: Bytes) {
-    super();
-    this.set("id", Value.fromBytes(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id != null, "Cannot save OwnershipTransferred entity without an ID");
-    if (id) {
-      assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type OwnershipTransferred must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
-      );
-      store.set("OwnershipTransferred", id.toBytes().toHexString(), this);
-    }
-  }
-
-  static load(id: Bytes): OwnershipTransferred | null {
-    return changetype<OwnershipTransferred | null>(
-      store.get("OwnershipTransferred", id.toHexString())
-    );
-  }
-
-  get id(): Bytes {
-    let value = this.get("id");
-    return value!.toBytes();
-  }
-
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get previousOwner(): Bytes {
-    let value = this.get("previousOwner");
-    return value!.toBytes();
-  }
-
-  set previousOwner(value: Bytes) {
-    this.set("previousOwner", Value.fromBytes(value));
-  }
-
-  get newOwner(): Bytes {
-    let value = this.get("newOwner");
-    return value!.toBytes();
-  }
-
-  set newOwner(value: Bytes) {
-    this.set("newOwner", Value.fromBytes(value));
-  }
-
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    return value!.toBigInt();
-  }
-
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
-  }
-
-  get blockTimestamp(): BigInt {
-    let value = this.get("blockTimestamp");
-    return value!.toBigInt();
-  }
-
-  set blockTimestamp(value: BigInt) {
-    this.set("blockTimestamp", Value.fromBigInt(value));
-  }
-
-  get transactionHash(): Bytes {
-    let value = this.get("transactionHash");
-    return value!.toBytes();
-  }
-
-  set transactionHash(value: Bytes) {
-    this.set("transactionHash", Value.fromBytes(value));
   }
 }
