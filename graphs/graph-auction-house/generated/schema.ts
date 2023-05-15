@@ -413,6 +413,15 @@ export class AuctionCreated extends Entity {
     this.set("bidCount", Value.fromBigInt(value));
   }
 
+  get highestBid(): BigInt {
+    let value = this.get("highestBid");
+    return value!.toBigInt();
+  }
+
+  set highestBid(value: BigInt) {
+    this.set("highestBid", Value.fromBigInt(value));
+  }
+
   get blockTimestamp(): BigInt {
     let value = this.get("blockTimestamp");
     return value!.toBigInt();

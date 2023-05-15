@@ -42,6 +42,7 @@ type AuctionCreated @entity(immutable: false) {
   minBidPrice: BigInt! # uint256
   bidLimit: BigInt! # uint256
   bidCount: BigInt!
+  highestBid: BigInt!
   blockTimestamp: BigInt!
 }
 

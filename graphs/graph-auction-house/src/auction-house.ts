@@ -57,6 +57,9 @@ export function handleAuctionBid(event: AuctionBidEvent): void {
   if (auctionCreatedEntity) {
     let temp = auctionCreatedEntity.bidCount
     auctionCreatedEntity.bidCount = temp.plus(BIGINT_ONE)
+    if (event.params.price.gt(auctionCreatedEntity.highestBid)) {
+      auctionCreatedEntity.highestBid = event.params.price
+    }
     auctionCreatedEntity.save()
   }
 }
@@ -81,12 +84,44 @@ export function handleAuctionCancelBid(event: AuctionCancelBidEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.save()
 
+  let bidPrice = BIGINT_ZERO
+  let id =
+    event.params.auctionIndex.toString()
+    .concat("-")
+    .concat(event.params.bidder.toHexString())
+    .concat("-")
+    .concat(event.params.bidIndex.toString())
+  let auctionBidEntity = AuctionBid.load(
+    id
+  )
+  if (auctionBidEntity) {
+    bidPrice = auctionBidEntity.price
+    auctionBidEntity.unset(id)
+  }
+
   let auctionCreatedEntity = AuctionCreated.load(
     event.params.auctionIndex.toString()
   )
   if (auctionCreatedEntity) {
     let temp = auctionCreatedEntity.bidCount
     auctionCreatedEntity.bidCount = temp.minus(BIGINT_ONE)
+    if (bidPrice.equals(auctionCreatedEntity.highestBid)) {
+      auctionCreatedEntity.highestBid = BIGINT_ZERO
+      for (let i = BIGINT_ZERO ; i.lt(auctionCreatedEntity.bidCount) ; i.plus(BIGINT_ONE)) {
+        let auctionBidIterator = AuctionBid.load(
+          event.params.auctionIndex.toString()
+          .concat("-")
+          .concat(event.params.bidder.toHexString())
+          .concat("-")
+          .concat(i.toString())
+        )
+        if (auctionBidIterator) {
+          if (auctionBidIterator.price.gt(auctionCreatedEntity.highestBid)) {
+            auctionCreatedEntity.highestBid = auctionBidIterator.price
+          }
+        }
+      }
+    }
     auctionCreatedEntity.save()
   }
 }
@@ -125,6 +160,7 @@ export function handleAuctionCreated(event: AuctionCreatedEvent): void {
   entity.minBidPrice = event.params.minBidPrice
   entity.bidLimit = event.params.bidLimit
   entity.bidCount = BIGINT_ZERO
+  entity.highestBid = BIGINT_ZERO
   entity.blockTimestamp = event.block.timestamp
   entity.save()
 }
