@@ -4,9 +4,12 @@ import {
   AuctionCancelBid as AuctionCancelBidEvent,
   AuctionClaim as AuctionClaimEvent,
   AuctionCreated as AuctionCreatedEvent,
+  AuctionCriteriaUpdated as AuctionCriteriaUpdatedEvent,
   AuctionDurationUpdated as AuctionDurationUpdatedEvent,
   AuctionFundsWalletUpdated as AuctionFundsWalletUpdatedEvent,
+  AuctionMinBidPriceUpdated as AuctionMinBidPriceUpdatedEvent,
   AuctionSettled as AuctionSettledEvent,
+  AuctionTokenLimitUpdated as AuctionTokenLimitUpdatedEvent,
   Initialized as InitializedEvent
 } from "../generated/AuctionHouse/AuctionHouse"
 
@@ -16,9 +19,12 @@ import {
   AuctionCancelBid,
   AuctionClaim,
   AuctionCreated,
+  AuctionCriteriaUpdated,
   AuctionDurationUpdated,
   AuctionFundsWalletUpdated,
+  AuctionMinBidPriceUpdated,
   AuctionSettled,
+  AuctionTokenLimitUpdated,
   Initialized
 } from "../generated/schema"
 
@@ -123,6 +129,20 @@ export function handleAuctionCreated(event: AuctionCreatedEvent): void {
   entity.save()
 }
 
+export function handleAuctionCriteriaUpdated(event: AuctionCriteriaUpdatedEvent): void {
+  let entity = new AuctionCriteriaUpdated(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  )
+  entity.newTokenLimit = event.params.newTokenLimit
+  entity.oldTokenLimit = event.params.oldTokenLimit
+  entity.newMinBidPrice = event.params.newMinBidPrice
+  entity.oldMinBidPrice = event.params.oldMinBidPrice
+  entity.newBidLimit = event.params.newBidLimit
+  entity.oldBidLimit = event.params.oldBidLimit
+  entity.blockTimestamp = event.block.timestamp
+  entity.save()
+}
+
 export function handleAuctionDurationUpdated(event: AuctionDurationUpdatedEvent): void {
   let entity = new AuctionDurationUpdated(
     event.transaction.hash.concatI32(event.logIndex.toI32())
@@ -143,11 +163,31 @@ export function handleAuctionFundsWalletUpdated(event: AuctionFundsWalletUpdated
   entity.save()
 }
 
+export function handleAuctionMinBidPriceUpdated(event: AuctionMinBidPriceUpdatedEvent): void {
+  let entity = new AuctionMinBidPriceUpdated(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  )
+  entity.newMinBidPrice = event.params.newMinBidPrice
+  entity.oldMinBidPrice = event.params.oldMinBidPrice
+  entity.blockTimestamp = event.block.timestamp
+  entity.save()
+}
+
 export function handleAuctionSettled(event: AuctionSettledEvent): void {
   let entity = new AuctionSettled(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   )
   entity.auctionIndex = event.params.auctionIndex
+  entity.blockTimestamp = event.block.timestamp
+  entity.save()
+}
+
+export function handleAuctionTokenLimitUpdated(event: AuctionTokenLimitUpdatedEvent): void {
+  let entity = new AuctionTokenLimitUpdated(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  )
+  entity.newTokenLimit = event.params.newTokenLimit
+  entity.oldTokenLimit = event.params.oldTokenLimit
   entity.blockTimestamp = event.block.timestamp
   entity.save()
 }

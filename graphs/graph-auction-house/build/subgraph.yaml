@@ -19,9 +19,12 @@ dataSources:
         - AuctionCancelBid
         - AuctionClaim
         - AuctionCreated
+        - AuctionCriteriaUpdated
         - AuctionDurationUpdated
         - AuctionFundsWalletUpdated
+        - AuctionMinBidPriceUpdated
         - AuctionSettled
+        - AuctionTokenLimitUpdated
         - Initialized
       abis:
         - name: AuctionHouse
@@ -37,12 +40,18 @@ dataSources:
           handler: handleAuctionClaim
         - event: AuctionCreated(indexed uint256,uint256,uint256,uint256,uint256,uint256)
           handler: handleAuctionCreated
+        - event: AuctionCriteriaUpdated(uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handleAuctionCriteriaUpdated
         - event: AuctionDurationUpdated(uint256,uint256)
           handler: handleAuctionDurationUpdated
         - event: AuctionFundsWalletUpdated(address,address)
           handler: handleAuctionFundsWalletUpdated
+        - event: AuctionMinBidPriceUpdated(uint256,uint256)
+          handler: handleAuctionMinBidPriceUpdated
         - event: AuctionSettled(indexed uint256)
           handler: handleAuctionSettled
+        - event: AuctionTokenLimitUpdated(uint256,uint256)
+          handler: handleAuctionTokenLimitUpdated
         - event: Initialized(uint8)
           handler: handleInitialized
       file: AuctionHouse\AuctionHouse.wasm

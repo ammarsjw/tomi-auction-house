@@ -423,6 +423,106 @@ export class AuctionCreated extends Entity {
   }
 }
 
+export class AuctionCriteriaUpdated extends Entity {
+  constructor(id: Bytes) {
+    super();
+    this.set("id", Value.fromBytes(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(
+      id != null,
+      "Cannot save AuctionCriteriaUpdated entity without an ID"
+    );
+    if (id) {
+      assert(
+        id.kind == ValueKind.BYTES,
+        `Entities of type AuctionCriteriaUpdated must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("AuctionCriteriaUpdated", id.toBytes().toHexString(), this);
+    }
+  }
+
+  static load(id: Bytes): AuctionCriteriaUpdated | null {
+    return changetype<AuctionCriteriaUpdated | null>(
+      store.get("AuctionCriteriaUpdated", id.toHexString())
+    );
+  }
+
+  get id(): Bytes {
+    let value = this.get("id");
+    return value!.toBytes();
+  }
+
+  set id(value: Bytes) {
+    this.set("id", Value.fromBytes(value));
+  }
+
+  get newTokenLimit(): BigInt {
+    let value = this.get("newTokenLimit");
+    return value!.toBigInt();
+  }
+
+  set newTokenLimit(value: BigInt) {
+    this.set("newTokenLimit", Value.fromBigInt(value));
+  }
+
+  get oldTokenLimit(): BigInt {
+    let value = this.get("oldTokenLimit");
+    return value!.toBigInt();
+  }
+
+  set oldTokenLimit(value: BigInt) {
+    this.set("oldTokenLimit", Value.fromBigInt(value));
+  }
+
+  get newMinBidPrice(): BigInt {
+    let value = this.get("newMinBidPrice");
+    return value!.toBigInt();
+  }
+
+  set newMinBidPrice(value: BigInt) {
+    this.set("newMinBidPrice", Value.fromBigInt(value));
+  }
+
+  get oldMinBidPrice(): BigInt {
+    let value = this.get("oldMinBidPrice");
+    return value!.toBigInt();
+  }
+
+  set oldMinBidPrice(value: BigInt) {
+    this.set("oldMinBidPrice", Value.fromBigInt(value));
+  }
+
+  get newBidLimit(): BigInt {
+    let value = this.get("newBidLimit");
+    return value!.toBigInt();
+  }
+
+  set newBidLimit(value: BigInt) {
+    this.set("newBidLimit", Value.fromBigInt(value));
+  }
+
+  get oldBidLimit(): BigInt {
+    let value = this.get("oldBidLimit");
+    return value!.toBigInt();
+  }
+
+  set oldBidLimit(value: BigInt) {
+    this.set("oldBidLimit", Value.fromBigInt(value));
+  }
+
+  get blockTimestamp(): BigInt {
+    let value = this.get("blockTimestamp");
+    return value!.toBigInt();
+  }
+
+  set blockTimestamp(value: BigInt) {
+    this.set("blockTimestamp", Value.fromBigInt(value));
+  }
+}
+
 export class AuctionDurationUpdated extends Entity {
   constructor(id: Bytes) {
     super();
@@ -551,6 +651,70 @@ export class AuctionFundsWalletUpdated extends Entity {
   }
 }
 
+export class AuctionMinBidPriceUpdated extends Entity {
+  constructor(id: Bytes) {
+    super();
+    this.set("id", Value.fromBytes(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(
+      id != null,
+      "Cannot save AuctionMinBidPriceUpdated entity without an ID"
+    );
+    if (id) {
+      assert(
+        id.kind == ValueKind.BYTES,
+        `Entities of type AuctionMinBidPriceUpdated must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("AuctionMinBidPriceUpdated", id.toBytes().toHexString(), this);
+    }
+  }
+
+  static load(id: Bytes): AuctionMinBidPriceUpdated | null {
+    return changetype<AuctionMinBidPriceUpdated | null>(
+      store.get("AuctionMinBidPriceUpdated", id.toHexString())
+    );
+  }
+
+  get id(): Bytes {
+    let value = this.get("id");
+    return value!.toBytes();
+  }
+
+  set id(value: Bytes) {
+    this.set("id", Value.fromBytes(value));
+  }
+
+  get newMinBidPrice(): BigInt {
+    let value = this.get("newMinBidPrice");
+    return value!.toBigInt();
+  }
+
+  set newMinBidPrice(value: BigInt) {
+    this.set("newMinBidPrice", Value.fromBigInt(value));
+  }
+
+  get oldMinBidPrice(): BigInt {
+    let value = this.get("oldMinBidPrice");
+    return value!.toBigInt();
+  }
+
+  set oldMinBidPrice(value: BigInt) {
+    this.set("oldMinBidPrice", Value.fromBigInt(value));
+  }
+
+  get blockTimestamp(): BigInt {
+    let value = this.get("blockTimestamp");
+    return value!.toBigInt();
+  }
+
+  set blockTimestamp(value: BigInt) {
+    this.set("blockTimestamp", Value.fromBigInt(value));
+  }
+}
+
 export class AuctionSettled extends Entity {
   constructor(id: Bytes) {
     super();
@@ -591,6 +755,70 @@ export class AuctionSettled extends Entity {
 
   set auctionIndex(value: BigInt) {
     this.set("auctionIndex", Value.fromBigInt(value));
+  }
+
+  get blockTimestamp(): BigInt {
+    let value = this.get("blockTimestamp");
+    return value!.toBigInt();
+  }
+
+  set blockTimestamp(value: BigInt) {
+    this.set("blockTimestamp", Value.fromBigInt(value));
+  }
+}
+
+export class AuctionTokenLimitUpdated extends Entity {
+  constructor(id: Bytes) {
+    super();
+    this.set("id", Value.fromBytes(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(
+      id != null,
+      "Cannot save AuctionTokenLimitUpdated entity without an ID"
+    );
+    if (id) {
+      assert(
+        id.kind == ValueKind.BYTES,
+        `Entities of type AuctionTokenLimitUpdated must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("AuctionTokenLimitUpdated", id.toBytes().toHexString(), this);
+    }
+  }
+
+  static load(id: Bytes): AuctionTokenLimitUpdated | null {
+    return changetype<AuctionTokenLimitUpdated | null>(
+      store.get("AuctionTokenLimitUpdated", id.toHexString())
+    );
+  }
+
+  get id(): Bytes {
+    let value = this.get("id");
+    return value!.toBytes();
+  }
+
+  set id(value: Bytes) {
+    this.set("id", Value.fromBytes(value));
+  }
+
+  get newTokenLimit(): BigInt {
+    let value = this.get("newTokenLimit");
+    return value!.toBigInt();
+  }
+
+  set newTokenLimit(value: BigInt) {
+    this.set("newTokenLimit", Value.fromBigInt(value));
+  }
+
+  get oldTokenLimit(): BigInt {
+    let value = this.get("oldTokenLimit");
+    return value!.toBigInt();
+  }
+
+  set oldTokenLimit(value: BigInt) {
+    this.set("oldTokenLimit", Value.fromBigInt(value));
   }
 
   get blockTimestamp(): BigInt {
