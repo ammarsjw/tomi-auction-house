@@ -330,7 +330,6 @@ contract AuctionHouse is AccessControlUpgradeable {
     }
 
     function createBid(uint256 price, uint256 amountTomi, uint8 tokenType) external {
-        require(tokenType < biddingTokens.length, "AuctionHouse::createBid: invalid token type");
         uint256 auctionIndex = auctionCount - 1;
         Auction storage auction = getAuctions[auctionIndex];
         getBidLimits[auctionIndex][_msgSender()] += amountTomi;
@@ -339,6 +338,7 @@ contract AuctionHouse is AccessControlUpgradeable {
 
         require(block.timestamp < auction.endTime, "AuctionHouse::createBid: current auction completed");
         require(price > auction.minBidPrice, "AuctionHouse::createBid: invalid price");
+        require(tokenType < biddingTokens.length, "AuctionHouse::createBid: invalid token type");
         require(getBidLimits[auctionIndex][_msgSender()] < auction.bidLimit, "AuctionHouse::createBid: bid limit exceeded");
         require(
             token.allowance(_msgSender(), address(this)) >= amount &&
