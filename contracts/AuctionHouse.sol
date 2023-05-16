@@ -9,7 +9,6 @@ import "./libraries/SafeERC20Upgradeable.sol";
 
 import "./utils/AccessControlUpgradeable.sol";
 
-
 contract AuctionHouse is AccessControlUpgradeable {
 
     /* ========== STATE VARIABLES ========== */
@@ -400,7 +399,7 @@ contract AuctionHouse is AccessControlUpgradeable {
 
         emit AuctionClaim(auctionIndex, bid.bidIndex, bid.bidder);
     }
-
-    // TODO comments
-    // TODO clean
 }
+
+// TODO comments
+// TODO clean
