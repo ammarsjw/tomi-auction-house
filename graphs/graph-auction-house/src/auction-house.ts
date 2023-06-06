@@ -1,3 +1,5 @@
+import { store } from '@graphprotocol/graph-ts'
+
 import {
   AuctionBid as AuctionBidEvent,
   AuctionBidLimitUpdated as AuctionBidLimitUpdatedEvent,
@@ -96,7 +98,7 @@ export function handleAuctionCancelBid(event: AuctionCancelBidEvent): void {
   )
   if (auctionBidEntity) {
     bidPrice = auctionBidEntity.price
-    auctionBidEntity.unset(id)
+    store.remove('AuctionBid', id)
   }
 
   let auctionCreatedEntity = AuctionCreated.load(
